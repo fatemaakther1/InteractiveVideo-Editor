@@ -1,0 +1,548 @@
+/* PreviewPage.css */
+
+* {
+  box-sizing: border-box;
+}
+
+/* Preview Page Layout */
+.preview-page {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0f0f23;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.preview-page.loading {
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-message {
+  font-size: 18px;
+  color: #fff;
+  text-align: center;
+}
+
+/* Preview Navigation */
+.preview-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1a1a2e;
+  color: white;
+  padding: 12px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.nav-left .back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #6b46c1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.nav-left .back-btn:hover {
+  background: #553c9a;
+  transform: translateX(-2px);
+}
+
+.nav-center {
+  text-align: center;
+}
+
+.preview-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.nav-right .element-count {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  font-size: 12px;
+  color: #e5e7eb;
+}
+
+/* Preview Content */
+.preview-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: #000;
+}
+
+/* Video Player Preview */
+.video-player-preview {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.video-wrapper {
+  position: relative;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* VidStack Player */
+.vidstack-player {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Interactive Overlay */
+.interactive-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Basic overlay - simple and clean */
+
+.interactive-element {
+  position: absolute;
+  pointer-events: auto;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.interactive-element.preview-mode {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Interactive Element Types */
+.interactive-element.text.preview-mode {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f2937;
+  padding: 12px 16px;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.interactive-element.pointer.preview-mode {
+  background: #f59e0b;
+  color: white;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);
+}
+
+.interactive-element.pointer.preview-mode:hover {
+  background: #d97706;
+  transform: scale(1.1);
+}
+
+.interactive-element.image.preview-mode {
+  background: transparent;
+  border: 3px solid #10b981;
+  padding: 4px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.interactive-element.image.preview-mode:hover {
+  border-color: #059669;
+  transform: scale(1.05);
+}
+
+.element-image {
+  max-width: 200px;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.interactive-element.opener.preview-mode {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: white;
+  cursor: pointer;
+  padding: 12px 20px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+.interactive-element.opener.preview-mode:hover {
+  background: linear-gradient(135deg, #7c3aed, #9333ea);
+  transform: translateY(-2px);
+}
+
+.interactive-element.interactive-button.preview-mode {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 12px 20px;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+}
+
+.interactive-element.interactive-button.preview-mode:hover {
+  background: linear-gradient(135deg, #0891b2, #0e7490);
+  transform: translateY(-2px);
+}
+
+.interactive-element.interactive-question.preview-mode {
+  background: transparent;
+  color: inherit;
+  cursor: default;
+  padding: 0;
+  box-shadow: none;
+}
+
+/* Question Container */
+.question-container {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border: 3px solid #f97316;
+  backdrop-filter: blur(10px);
+}
+
+.question-title {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  text-align: center;
+}
+
+.question-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.multiple-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Individual Radio Button Options */
+.multiple-choice-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.individual-radio-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: white;
+  font-weight: 600;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.individual-radio-option:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.individual-radio-option:active {
+  transform: translateY(0px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.radio-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.radio-circle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: transparent;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.individual-radio-option:hover .radio-circle {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+.option-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  flex: 1;
+  text-align: left;
+}
+
+.true-false {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  justify-content: center;
+}
+
+.text-input {
+  display: flex;
+  gap: 10px;
+}
+
+.text-input input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.text-input input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.option-btn {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.option-btn:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.submit-btn {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* Results */
+.result {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.result.correct {
+  background: linear-gradient(135deg, #d1fae5, #ecfdf5);
+  border: 2px solid #10b981;
+}
+
+.result.incorrect {
+  background: linear-gradient(135deg, #fee2e2, #fef2f2);
+  border: 2px solid #ef4444;
+}
+
+.result-text {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.result.correct .result-text {
+  color: #065f46;
+}
+
+.result.incorrect .result-text {
+  color: #991b1b;
+}
+
+.correct-answer,
+.your-answer {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
+
+/* Element Content */
+.element-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.element-text {
+  font-weight: 600;
+}
+
+/* Preview Footer */
+.preview-footer {
+  padding: 16px 24px;
+  background: #1a1a2e;
+  border-top: 1px solid #374151;
+}
+
+.footer-info {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.footer-info p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #d1d5db;
+}
+
+/* Hover Effects */
+.interactive-element.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .preview-content {
+    padding: 16px;
+  }
+  
+  .question-container {
+    min-width: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .preview-navbar {
+    padding: 8px 16px;
+  }
+  
+  .preview-title {
+    font-size: 16px;
+  }
+  
+  .preview-content {
+    padding: 12px;
+  }
+  
+  .question-container {
+    padding: 16px;
+    min-width: 280px;
+  }
+  
+  .question-title {
+    font-size: 16px;
+  }
+  
+  .true-false {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .text-input {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .option-btn,
+  .submit-btn {
+    font-size: 14px;
+    padding: 10px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .preview-content {
+    padding: 8px;
+  }
+  
+  .question-container {
+    padding: 12px;
+    min-width: 260px;
+  }
+  
+  .element-image {
+    max-width: 150px;
+    max-height: 100px;
+  }
+}

@@ -1,0 +1,15 @@
+vai ame structure bujar try kortese ..
+
+so far update jodi boli :
+
+1 . amr admin and user 2 ta mode lagtese
+2 . admin learnWrolds e onk easily data set korte partese 
+    (ame age ja korselam admin side thake mostly sob hardcoded chilo.. ) 
+3 . amk koto ta component e korle better hoy dektese
+
+ekdom simple taki suru korram 
+
+onk events dekse custom video player bananir lage 
+ogun tor nam kois 
+
+age ja dekse eta pura banani asel vidstack dia video player 

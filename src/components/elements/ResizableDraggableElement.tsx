@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Rnd } from 'react-rnd';
-import type { InteractiveElement } from '../types';
+import type { InteractiveElement } from '../../types';
 
 interface ResizableDraggableElementProps {
   element: InteractiveElement;
@@ -131,11 +131,65 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
       minWidth={80}
       minHeight={30}
       bounds="parent"
-      enableResizing={isSelected}
+      enableResizing={isSelected ? {
+        top: true,
+        right: true,
+        bottom: true,
+        left: true,
+        topRight: true,
+        bottomRight: true,
+        bottomLeft: true,
+        topLeft: true,
+      } : false}
       disableDragging={false}
+      dragHandleClassName="drag-handle"
       resizeHandleStyles={{
+        top: {
+          background: '#2563eb',
+          border: '2px solid white',
+          borderRadius: '4px',
+          width: '20px',
+          height: '6px',
+          top: '-3px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          boxShadow: '0 2px 8px rgba(37, 99, 235, 0.4)',
+        },
+        right: {
+          background: '#2563eb',
+          border: '2px solid white',
+          borderRadius: '4px',
+          width: '6px',
+          height: '20px',
+          right: '-3px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          boxShadow: '0 2px 8px rgba(37, 99, 235, 0.4)',
+        },
+        bottom: {
+          background: '#2563eb',
+          border: '2px solid white',
+          borderRadius: '4px',
+          width: '20px',
+          height: '6px',
+          bottom: '-3px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          boxShadow: '0 2px 8px rgba(37, 99, 235, 0.4)',
+        },
+        left: {
+          background: '#2563eb',
+          border: '2px solid white',
+          borderRadius: '4px',
+          width: '6px',
+          height: '20px',
+          left: '-3px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          boxShadow: '0 2px 8px rgba(37, 99, 235, 0.4)',
+        },
         bottomRight: {
-          background: '#2563eb', // primary-600
+          background: '#2563eb',
           border: '3px solid white',
           borderRadius: '50%',
           width: '14px',
@@ -176,13 +230,18 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
         },
       }}
       resizeHandleClasses={{
-        bottomRight: 'resize-handle',
-        bottomLeft: 'resize-handle',
-        topRight: 'resize-handle',
-        topLeft: 'resize-handle',
+        top: 'resize-handle-top',
+        right: 'resize-handle-right',
+        bottom: 'resize-handle-bottom',
+        left: 'resize-handle-left',
+        bottomRight: 'resize-handle-corner',
+        bottomLeft: 'resize-handle-corner',
+        topRight: 'resize-handle-corner',
+        topLeft: 'resize-handle-corner',
       }}
     >
       <div
+        className="drag-handle"
         style={getElementStyle()}
         onClick={handleClick}
       >

@@ -1,4 +1,4 @@
-import React, {
+import {
   forwardRef,
   useState,
   useRef,
@@ -18,9 +18,9 @@ import type {
   InteractiveElement,
   VideoPlayerAdminProps,
   VideoPlayerRef,
-} from "../types";
-import { VIDEO_CONFIG } from "../constants";
-import { elementUtils } from "../utils";
+} from "../../types";
+import { VIDEO_CONFIG } from "../../constants";
+import { elementUtils } from "../../utils";
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
 

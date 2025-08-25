@@ -1,42 +1,63 @@
-import React, { forwardRef, useState, useRef, useImperativeHandle } from 'react';
-import { MediaPlayer, MediaProvider, MediaPlayerInstance } from '@vidstack/react';
+import React, {
+  forwardRef,
+  useState,
+  useRef,
+  useImperativeHandle,
+  useEffect,
+} from "react";
+import {
+  MediaPlayer,
+  MediaProvider,
+  MediaPlayerInstance,
+} from "@vidstack/react";
 import {
   defaultLayoutIcons,
   DefaultVideoLayout,
-} from '@vidstack/react/player/layouts/default';
-import type { InteractiveElement, VideoPlayerAdminProps, VideoPlayerRef, Position } from '../types';
-import { VIDEO_CONFIG } from '../constants';
-import { elementUtils } from '../utils';
-import '@vidstack/react/player/styles/default/theme.css';
-import '@vidstack/react/player/styles/default/layouts/video.css';
+} from "@vidstack/react/player/layouts/default";
+import type {
+  InteractiveElement,
+  VideoPlayerAdminProps,
+  VideoPlayerRef,
+} from "../types";
+import { VIDEO_CONFIG } from "../constants";
+import { elementUtils } from "../utils";
+import "@vidstack/react/player/styles/default/theme.css";
+import "@vidstack/react/player/styles/default/layouts/video.css";
 
 const VideoPlayerAdmin = forwardRef<VideoPlayerRef, VideoPlayerAdminProps>(
   ({ elements, onAddElement }, ref) => {
     const [currentTime, setCurrentTime] = useState(0);
-    const [showAddButton, setShowAddButton] = useState(false);
-    const [addButtonPosition, setAddButtonPosition] = useState<Position>({ x: 0, y: 0 });
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [duration, setDuration] = useState(0);
+    const [isLoaded, setIsLoaded] = useState(false);
     const playerRef = useRef<MediaPlayerInstance>(null);
 
     useImperativeHandle(ref, () => ({
       get currentTime() {
         return currentTime;
-      }
+      },
     }));
 
-    const handleVideoClick = (e: React.MouseEvent<HTMLDivElement>) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      setAddButtonPosition({ x, y });
-      setShowAddButton(true);
-    };
-
-    const handleAddClick = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onAddElement(addButtonPosition.x, addButtonPosition.y);
-      setShowAddButton(false);
-    };
+    useEffect(() => {
+      const player = playerRef.current;
+      if (player) {
+        const handleLoadedData = () => {
+          setIsLoaded(true);
+        };
+        
+        const handleError = (error: any) => {
+          console.error('Video loading error:', error);
+        };
+        
+        player.addEventListener('loadeddata', handleLoadedData);
+        player.addEventListener('error', handleError);
+        
+        return () => {
+          player.removeEventListener('loadeddata', handleLoadedData);
+          player.removeEventListener('error', handleError);
+        };
+      }
+    }, []);
 
     const getVisibleElements = () => {
       return elementUtils.getVisibleElements(elements, currentTime);
@@ -50,13 +71,18 @@ const VideoPlayerAdmin = forwardRef<VideoPlayerRef, VideoPlayerAdminProps>(
           style={{
             left: `${element.x}px`,
             top: `${element.y}px`,
-            minWidth: element.type === 'interactive-question' ? '200px' : 'auto',
+            minWidth:
+              element.type === "interactive-question" ? "200px" : "auto",
           }}
           onClick={(e) => e.stopPropagation()}
           title={`${element.type}: ${element.content}`}
         >
-          {element.type === 'image' && element.url ? (
-            <img src={element.url} alt={element.content} className="element-image" />
+          {element.type === "image" && element.url ? (
+            <img
+              src={element.url}
+              alt={element.content}
+              className="element-image max-w-full h-auto"
+            />
           ) : (
             <div className="element-content">
               <span className="element-text">{element.content}</span>
@@ -68,40 +94,47 @@ const VideoPlayerAdmin = forwardRef<VideoPlayerRef, VideoPlayerAdminProps>(
     };
 
     return (
-      <div className="video-player-admin">
-        <div
-          className="video-wrapper"
-          onClick={handleVideoClick}
+      <div className="relative w-full h-full bg-gradient-to-br from-secondary-900 to-secondary-800 rounded-2xl overflow-hidden border border-secondary-700/30">
+        <MediaPlayer
+          ref={playerRef}
+          className="w-full h-full"
+          src={VIDEO_CONFIG.URL}
+          playsInline
+          autoplay={false}
+          controls
+          onTimeUpdate={({ currentTime }) => setCurrentTime(currentTime)}
+          onDurationChange={({ duration }) => setDuration(duration)}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onLoadedData={() => setIsLoaded(true)}
         >
-          <MediaPlayer
-            ref={playerRef}
-            className="video-player"
-            src={VIDEO_CONFIG.URL}
-            playsInline
-            onTimeUpdate={({ currentTime }) => setCurrentTime(currentTime)}
-            style={{
-              width: '100%',
-              height: 'auto',
-              display: 'block'
-            }}
-          >
-            <MediaProvider />
-            <DefaultVideoLayout
-              icons={defaultLayoutIcons}
-              thumbnails=""
-            />
-          </MediaPlayer>
-
-          {/* Interactive Elements Overlay */}
-          <div className="interactive-overlay">
-            {getVisibleElements().map(element => renderInteractiveElement(element))}
+          <MediaProvider className="w-full h-full rounded-2xl" />
+          <DefaultVideoLayout 
+            icons={defaultLayoutIcons} 
+            thumbnails="" 
+            className="w-full h-full"
+          />
+        </MediaPlayer>
+        
+        {/* Interactive Elements Overlay */}
+        {isLoaded && (
+          <div className="absolute inset-0 pointer-events-none">
+            {getVisibleElements().map((element) => renderInteractiveElement(element))}
           </div>
-        </div>
+        )}
+        
+        {!isLoaded && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-secondary-900/90 backdrop-blur-sm">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary-200 border-t-primary-600 mb-4"></div>
+            <div className="text-white text-lg font-medium">Loading video...</div>
+            <div className="text-primary-200 text-sm mt-1">Please wait a moment</div>
+          </div>
+        )}
       </div>
     );
   }
 );
 
-VideoPlayerAdmin.displayName = 'VideoPlayerAdmin';
+VideoPlayerAdmin.displayName = "VideoPlayerAdmin";
 
 export default VideoPlayerAdmin;

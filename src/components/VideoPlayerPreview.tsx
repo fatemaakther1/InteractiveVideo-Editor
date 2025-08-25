@@ -1,21 +1,32 @@
-import { useState, useRef } from 'react';
-import { MediaPlayer, MediaProvider, MediaPlayerInstance } from '@vidstack/react';
+import { useState, useRef, useEffect } from "react";
+import {
+  MediaPlayer,
+  MediaProvider,
+  MediaPlayerInstance,
+} from "@vidstack/react";
 import {
   defaultLayoutIcons,
   DefaultVideoLayout,
-} from '@vidstack/react/player/layouts/default';
-import type { InteractiveElement, VideoPlayerPreviewProps, AnswerState, ResultsState } from '../types';
-import { VIDEO_CONFIG, UI_CONSTANTS } from '../constants';
-import { elementUtils } from '../utils';
-import '@vidstack/react/player/styles/default/theme.css';
-import '@vidstack/react/player/styles/default/layouts/video.css';
+} from "@vidstack/react/player/layouts/default";
+import type {
+  InteractiveElement,
+  VideoPlayerPreviewProps,
+  AnswerState,
+  ResultsState,
+} from "../types";
+import { VIDEO_CONFIG, UI_CONSTANTS } from "../constants";
+import { elementUtils } from "../utils";
+import "@vidstack/react/player/styles/default/theme.css";
+import "@vidstack/react/player/styles/default/layouts/video.css";
 
-const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({ elements }) => {
+const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
+  elements,
+}) => {
   // Simple state variables - easy to understand
   const [currentTime, setCurrentTime] = useState(0); // Current video time in seconds
   const [selectedAnswer, setSelectedAnswer] = useState<AnswerState>({}); // User's answers to questions
   const [showResults, setShowResults] = useState<ResultsState>({}); // Show/hide question results
-  
+
   // Reference to the video player - allows us to control the video
   const playerRef = useRef<MediaPlayerInstance>(null);
 
@@ -23,10 +34,13 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({ elements }) => 
   // This is called when user clicks on buttons, images, etc.
   const handleElementClick = (element: InteractiveElement) => {
     // Check what type of element was clicked
-    if (element.type === 'image' && element.url) {
+    if (element.type === "image" && element.url) {
       // If it's an image, open the URL in a new tab
-      window.open(element.url, '_blank');
-    } else if ((element.type === 'interactive-button' || element.type === 'opener') && element.action) {
+      window.open(element.url, "_blank");
+    } else if (
+      (element.type === "interactive-button" || element.type === "opener") &&
+      element.action
+    ) {
       // If it's a button or opener, show an alert with the action
       alert(`Action: ${element.action}`);
     }
@@ -35,15 +49,18 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({ elements }) => 
 
   // Function to handle when user answers a question
   // This saves their answer and shows the result
-  const handleQuestionAnswer = (element: InteractiveElement, answer: string) => {
+  const handleQuestionAnswer = (
+    element: InteractiveElement,
+    answer: string
+  ) => {
     // Save the user's answer for this question
-    setSelectedAnswer(prev => ({ ...prev, [element.id]: answer }));
+    setSelectedAnswer((prev) => ({ ...prev, [element.id]: answer }));
     // Show the result
-    setShowResults(prev => ({ ...prev, [element.id]: true }));
-    
+    setShowResults((prev) => ({ ...prev, [element.id]: true }));
+
     // Hide the result after a few seconds
     setTimeout(() => {
-      setShowResults(prev => ({ ...prev, [element.id]: false }));
+      setShowResults((prev) => ({ ...prev, [element.id]: false }));
     }, UI_CONSTANTS.RESULT_AUTO_HIDE_DELAY);
   };
 
@@ -60,87 +77,91 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({ elements }) => 
     const isCorrect = selectedAnswer[element.id] === element.correctAnswer;
     // Check if we should show the result
     const showResult = showResults[element.id];
-    
+
     // Simple positioning - just use the x,y coordinates from the element
     const elementStyle = {
       left: `${element.x}px`, // Horizontal position
-      top: `${element.y}px`,  // Vertical position
+      top: `${element.y}px`, // Vertical position
     };
-    
-    if (element.type === 'interactive-question') {
+
+    if (element.type === "interactive-question") {
       return (
         <div
           key={element.id}
-          className={`interactive-element ${element.type} clickable preview-mode`}
-          style={{
-            ...elementStyle,
-            minWidth: '250px',
-          }}
+          className="absolute bg-white/95 backdrop-blur-md rounded-2xl shadow-large border border-primary-200/50 p-6 min-w-80 max-w-md animate-scale-in"
+          style={elementStyle}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="question-container">
-            <h4 className="question-title">{element.content}</h4>
+          <div className="space-y-4">
+            <div className="flex items-start justify-between">
+              <h4 className="text-lg font-bold text-primary-900 leading-tight">{element.content}</h4>
+              <div className="flex items-center space-x-1 px-2 py-1 bg-primary-100 rounded-full">
+                <i className="fas fa-question-circle text-primary-600 text-sm"></i>
+                <span className="text-xs font-semibold text-primary-700 uppercase tracking-wide">Question</span>
+              </div>
+            </div>
             
             {!showResult && (
-              <div className="question-options">
-                {element.questionType === 'multiple-choice' && element.options && (
-                  <div className="multiple-choice-options">
+              <div className="space-y-3">
+                {element.questionType === "multiple-choice" && element.options && (
+                  <div className="space-y-2">
                     {element.options.map((option, index) => (
-                      <div
+                      <button
                         key={index}
-                        className="individual-radio-option"
+                        className="w-full text-left p-3 rounded-xl border-2 border-secondary-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-200 group"
                         onClick={() => handleQuestionAnswer(element, option)}
                       >
-                        <input
-                          type="radio"
-                          name={`question-${element.id}`}
-                          value={option}
-                          className="radio-input"
-                          readOnly
-                        />
-                        <span className="radio-circle"></span>
-                        <span className="option-text">{option}</span>
-                      </div>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-5 h-5 rounded-full border-2 border-secondary-300 group-hover:border-primary-500 flex items-center justify-center">
+                            <div className="w-2 h-2 rounded-full bg-primary-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          </div>
+                          <span className="text-secondary-800 group-hover:text-primary-800 font-medium">{option}</span>
+                        </div>
+                      </button>
                     ))}
                   </div>
                 )}
-                
-                {element.questionType === 'true-false' && (
-                  <div className="true-false">
+
+                {element.questionType === "true-false" && (
+                  <div className="grid grid-cols-2 gap-3">
                     <button
-                      className="option-btn"
-                      onClick={() => handleQuestionAnswer(element, 'True')}
+                      className="p-4 rounded-xl bg-emerald-50 border-2 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100 text-emerald-800 font-bold transition-all duration-200 transform hover:scale-105"
+                      onClick={() => handleQuestionAnswer(element, "True")}
                     >
+                      <i className="fas fa-check mr-2"></i>
                       True
                     </button>
                     <button
-                      className="option-btn"
-                      onClick={() => handleQuestionAnswer(element, 'False')}
+                      className="p-4 rounded-xl bg-red-50 border-2 border-red-200 hover:border-red-400 hover:bg-red-100 text-red-800 font-bold transition-all duration-200 transform hover:scale-105"
+                      onClick={() => handleQuestionAnswer(element, "False")}
                     >
+                      <i className="fas fa-times mr-2"></i>
                       False
                     </button>
                   </div>
                 )}
-                
-                {element.questionType === 'text-input' && (
-                  <div className="text-input">
+
+                {element.questionType === "text-input" && (
+                  <div className="space-y-3">
                     <input
                       type="text"
-                      placeholder="Type your answer..."
+                      placeholder="Type your answer here..."
+                      className="w-full p-3 border-2 border-secondary-200 rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all duration-200 text-secondary-800 placeholder-secondary-500"
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
+                        if (e.key === "Enter") {
                           handleQuestionAnswer(element, e.currentTarget.value);
                         }
                       }}
                     />
                     <button
-                      className="submit-btn"
+                      className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-medium"
                       onClick={(e) => {
                         const input = e.currentTarget.previousElementSibling as HTMLInputElement;
                         handleQuestionAnswer(element, input.value);
                       }}
                     >
-                      Submit
+                      <i className="fas fa-paper-plane mr-2"></i>
+                      Submit Answer
                     </button>
                   </div>
                 )}
@@ -148,37 +169,111 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({ elements }) => 
             )}
             
             {showResult && (
-              <div className={`result ${isCorrect ? 'correct' : 'incorrect'}`}>
-                <p className="result-text">
-                  {isCorrect ? '✅ Correct!' : '❌ Incorrect'}
-                </p>
-                <p className="correct-answer">Correct answer: {element.correctAnswer}</p>
-                <p className="your-answer">Your answer: {selectedAnswer[element.id]}</p>
+              <div className={`p-4 rounded-xl border-2 animate-fade-in ${
+                isCorrect 
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                  : 'bg-red-50 border-red-200 text-red-800'
+              }`}>
+                <div className="flex items-center space-x-2 mb-2">
+                  <i className={`fas ${isCorrect ? 'fa-check-circle' : 'fa-times-circle'} text-xl`}></i>
+                  <span className="font-bold text-lg">
+                    {isCorrect ? 'Correct!' : 'Incorrect'}
+                  </span>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <p><span className="font-semibold">Correct answer:</span> {element.correctAnswer}</p>
+                  <p><span className="font-semibold">Your answer:</span> {selectedAnswer[element.id]}</p>
+                </div>
               </div>
             )}
           </div>
         </div>
       );
     }
-    
-    // Render other element types
+
+    // Render other element types (text, button, image, pointer, opener)
+    const getElementStyle = () => {
+      const baseStyle: React.CSSProperties = {
+        position: 'absolute',
+        left: `${element.x}px`,
+        top: `${element.y}px`,
+        padding: '14px',
+        borderRadius: '12px',
+        fontSize: '14px',
+        fontWeight: '600',
+        boxShadow: '0 8px 25px rgba(37, 99, 235, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15)',
+        cursor: 'pointer',
+        userSelect: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        wordBreak: 'break-word',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        minWidth: '90px',
+        color: 'white',
+        backdropFilter: 'blur(8px)',
+      };
+
+      // Type-specific styling with blue theme variations
+      switch (element.type) {
+        case 'interactive-button':
+          baseStyle.background = 'rgba(14, 165, 233, 0.95)';
+          baseStyle.border = '3px solid rgba(14, 165, 233, 0.8)';
+          baseStyle.boxShadow = '0 8px 25px rgba(14, 165, 233, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)';
+          break;
+        case 'image':
+          baseStyle.background = 'transparent';
+          baseStyle.border = 'none';
+          baseStyle.padding = '0';
+          baseStyle.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.3)';
+          break;
+        case 'pointer':
+          baseStyle.background = 'rgba(245, 158, 11, 0.95)';
+          baseStyle.border = '3px solid rgba(245, 158, 11, 0.8)';
+          baseStyle.borderRadius = '50%';
+          baseStyle.width = '48px';
+          baseStyle.height = '48px';
+          baseStyle.fontSize = '22px';
+          baseStyle.boxShadow = '0 8px 25px rgba(245, 158, 11, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)';
+          break;
+        case 'opener':
+          baseStyle.background = 'rgba(59, 130, 246, 0.95)';
+          baseStyle.border = '3px solid rgba(59, 130, 246, 0.8)';
+          baseStyle.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)';
+          break;
+        default:
+          // Default blue styling for 'text' and others
+          baseStyle.background = 'rgba(37, 99, 235, 0.95)';
+          baseStyle.border = '3px solid rgba(37, 99, 235, 0.8)';
+          baseStyle.boxShadow = '0 8px 25px rgba(37, 99, 235, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)';
+          break;
+      }
+
+      return baseStyle;
+    };
+
     return (
       <div
         key={element.id}
-        className={`interactive-element ${element.type} clickable preview-mode`}
-        style={elementStyle}
-        onClick={(e) => {
-          e.stopPropagation();
-          handleElementClick(element);
-        }}
-        title={element.action || element.url}
+        style={getElementStyle()}
+        onClick={() => handleElementClick(element)}
       >
         {element.type === 'image' && element.url ? (
-          <img src={element.url} alt={element.content} className="element-image" />
+          <img
+            src={element.url}
+            alt={element.content}
+            style={{
+              maxWidth: '200px',
+              maxHeight: '150px',
+              objectFit: 'contain',
+            }}
+            draggable={false}
+          />
+        ) : element.type === 'pointer' ? (
+          '👆'
         ) : (
-          <div className="element-content">
-            <span className="element-text">{element.content}</span>
-          </div>
+          element.content
         )}
       </div>
     );
@@ -187,7 +282,7 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({ elements }) => 
   // Main render - this is what gets displayed on the page
   return (
     <div className="video-player-preview">
-      <div className="video-wrapper" style={{ position: 'relative' }}>
+      <div className="video-wrapper" style={{ position: "relative" }}>
         {/* The actual video player */}
         <MediaPlayer
           ref={playerRef}
@@ -196,22 +291,21 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({ elements }) => 
           playsInline
           onTimeUpdate={({ currentTime }) => setCurrentTime(currentTime)}
           style={{
-            width: '100%',
-            height: 'auto',
-            display: 'block'
+            width: "100%",
+            height: "auto",
+            display: "block",
           }}
         >
           <MediaProvider />
-          <DefaultVideoLayout
-            icons={defaultLayoutIcons}
-            thumbnails=""
-          />
+          <DefaultVideoLayout icons={defaultLayoutIcons} thumbnails="" />
         </MediaPlayer>
 
         {/* Layer that sits on top of the video to show interactive elements */}
         <div className="interactive-overlay">
           {/* Show all elements that should be visible at current time */}
-          {getVisibleElements().map(element => renderInteractiveElement(element))}
+          {getVisibleElements().map((element) =>
+            renderInteractiveElement(element)
+          )}
         </div>
       </div>
     </div>

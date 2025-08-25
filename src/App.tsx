@@ -1,11 +1,10 @@
 import { Routes, Route } from 'react-router-dom'
 import AdminPanel from './components/AdminPanel'
 import PreviewPage from './components/PreviewPage'
-import './App.css'
 
 function App() {
   return (
-    <div className="app">
+    <div className="w-full h-screen">
       <Routes>
         <Route path="/" element={<AdminPanel />} />
         <Route path="/admin" element={<AdminPanel />} />

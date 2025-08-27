@@ -56,7 +56,7 @@ const AdminPanel = () => {
   const onAddElement = useCallback((x: number, y: number) => {
     setShowElementModal(true);
   }, []);
-
+ 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-secondary-50 to-secondary-100">
       <AdminToolbar

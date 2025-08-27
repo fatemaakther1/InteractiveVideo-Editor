@@ -1,5 +1,6 @@
 // Animation Types
 export type AnimationType = 
+  | 'none'
   | 'fadeIn' | 'fadeOut'
   | 'slideInLeft' | 'slideInRight' | 'slideOutLeft' | 'slideOutRight'
   | 'scaleIn' | 'scaleOut'
@@ -43,7 +44,7 @@ export type ElementType =
   | 'pointer' 
   | 'opener';
 
-export type QuestionType = 'multiple-choice' | 'true-false' | 'text-input';
+export type QuestionType = 'single-choice' | 'multiple-choice' | 'true-false' | 'text-input';
 
 // Main Interactive Element Interface
 export interface InteractiveElement {

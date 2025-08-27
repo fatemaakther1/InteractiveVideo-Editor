@@ -99,24 +99,25 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({
                 Question Type
               </label>
               <select 
-                value={selectedElement.questionType || 'multiple-choice'}
+                value={selectedElement.questionType || 'single-choice'}
                 onChange={(e) => onUpdateElement({ 
                   ...selectedElement, 
                   questionType: e.target.value as any,
                   // Reset options and correctAnswer when changing question type
-                  options: e.target.value === 'multiple-choice' ? ['Option 1', 'Option 2'] : undefined,
-                  correctAnswer: e.target.value === 'true-false' ? 'True' : (e.target.value === 'multiple-choice' ? 'Option 1' : '')
+                  options: (e.target.value === 'single-choice' || e.target.value === 'multiple-choice') ? ['Option 1', 'Option 2'] : undefined,
+                  correctAnswer: e.target.value === 'true-false' ? 'True' : ((e.target.value === 'single-choice' || e.target.value === 'multiple-choice') ? 'Option 1' : '')
                 })}
                 className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-secondary-50"
               >
-                <option value="multiple-choice">Multiple Choice</option>
+                <option value="single-choice">Single Choice (Radio)</option>
+                <option value="multiple-choice">Multiple Choice (Checkbox)</option>
                 <option value="true-false">True/False</option>
                 <option value="text-input">Text Input</option>
               </select>
             </div>
 
-            {/* Multiple Choice Options */}
-            {selectedElement.questionType === 'multiple-choice' && (
+            {/* Single Choice and Multiple Choice Options */}
+            {(selectedElement.questionType === 'single-choice' || selectedElement.questionType === 'multiple-choice') && (
               <div>
                 <label className="block text-sm font-bold text-secondary-800 mb-3">
                   Answer Options
@@ -377,6 +378,7 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({
               onChange={(e) => updateAnimation({ entrance: e.target.value as any })}
               className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-secondary-50"
             >
+              <option value="none">None</option>
               <option value="fadeIn">Fade in</option>
               <option value="slideInLeft">Slide in from left</option>
               <option value="slideInRight">Slide in from right</option>
@@ -404,6 +406,7 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({
               onChange={(e) => updateAnimation({ exit: e.target.value as any })}
               className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-secondary-50"
             >
+              <option value="none">None</option>
               <option value="fadeOut">Fade out</option>
               <option value="slideOutLeft">Slide out to left</option>
               <option value="slideOutRight">Slide out to right</option>
@@ -531,106 +534,6 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({
         </div>
       </div>
 
-      {/* Answer Feedback Effects - Only show for question elements */}
-      {selectedElement.type === 'interactive-question' && (
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-secondary-200 shadow-soft">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-secondary-800 flex items-center">
-              <i className="fas fa-check-double mr-2 text-green-600" />
-              Answer Feedback Effects
-            </h3>
-            <button
-              onClick={() => previewAnswerFeedbackEffects(selectedElement.id, elementWithAnimation)}
-              className="px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 text-xs font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-soft hover:shadow-medium flex items-center space-x-1"
-              title="Preview answer feedback effects (correct → incorrect → neutral)"
-            >
-              <i className="fas fa-play text-xs" />
-              <span>Preview</span>
-            </button>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-secondary-800 mb-3 flex items-center">
-                <i className="fas fa-check-circle mr-2 text-green-600" />
-                Correct Answer Effect
-              </label>
-              <select 
-                value={animation.answerEffects?.correct || 'pulse'}
-                onChange={(e) => updateAnimation({ 
-                  answerEffects: {
-                    ...animation.answerEffects,
-                    correct: e.target.value as any
-                  }
-                })}
-                className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-secondary-50"
-              >
-                <option value="pulse">Green Pulse</option>
-                <option value="glow">Green Glow</option>
-                <option value="bounceIn">Success Bounce</option>
-                <option value="scaleIn">Scale Up</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-bold text-secondary-800 mb-3 flex items-center">
-                <i className="fas fa-times-circle mr-2 text-red-600" />
-                Incorrect Answer Effect
-              </label>
-              <select 
-                value={animation.answerEffects?.incorrect || 'shake'}
-                onChange={(e) => updateAnimation({ 
-                  answerEffects: {
-                    ...animation.answerEffects,
-                    incorrect: e.target.value as any
-                  }
-                })}
-                className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-secondary-50"
-              >
-                <option value="shake">Red Shake</option>
-                <option value="flash">Red Flash</option>
-                <option value="pulse">Red Pulse</option>
-                <option value="glow">Red Glow</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-bold text-secondary-800 mb-3 flex items-center">
-                <i className="fas fa-circle mr-2 text-blue-600" />
-                Neutral Selection Effect (Optional)
-              </label>
-              <select 
-                value={animation.answerEffects?.neutral || 'pulse'}
-                onChange={(e) => updateAnimation({ 
-                  answerEffects: {
-                    ...animation.answerEffects,
-                    neutral: e.target.value as any
-                  }
-                })}
-                className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-secondary-50"
-              >
-                <option value="pulse">Blue Pulse</option>
-                <option value="glow">Blue Glow</option>
-                <option value="scaleIn">Scale Effect</option>
-                <option value="fadeIn">Fade Effect</option>
-              </select>
-            </div>
-
-            <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
-              <div className="flex items-start space-x-2">
-                <i className="fas fa-info-circle text-blue-600 mt-0.5" />
-                <div>
-                  <p className="text-sm text-blue-800 font-medium">
-                    Answer feedback effects trigger immediately when users select an option.
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    These animations provide instant visual feedback before showing the result popup.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 

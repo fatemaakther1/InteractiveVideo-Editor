@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Rnd } from "react-rnd";
 import type { InteractiveElement } from "../../types";
+import MCQPreview from "../admin/MCQPreview";
 
 interface ResizableDraggableElementProps {
   element: InteractiveElement;
@@ -272,47 +273,56 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
         topLeft: "resize-handle-corner",
       }}
     >
-      <div
-        className="drag-handle"
-        style={{ ...getElementStyle(), height: "100%", width: "100%" }}
-        onClick={handleClick}
-        data-element-id={element.id}
-      >
-        {element.type === "image" && element.url ? (
-          <img
-            src={element.url}
-            alt={element.content}
-            style={{
-              maxWidth: "100%",
-              maxHeight: "100%",
-              objectFit: "contain",
-            }}
-            draggable={false}
-          />
-        ) : (
-          <div>
-            {element.content}
-            {isSelected && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "-25px",
-                  left: "0",
-                  background: "rgba(0, 0, 0, 0.8)",
-                  color: "white",
-                  padding: "2px 8px",
-                  borderRadius: "4px",
-                  fontSize: "10px",
-                  fontWeight: "400",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {element.type}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      {/* Render interactive-question elements with MCQPreview */}
+      {element.type === "interactive-question" ? (
+        <MCQPreview
+          element={element}
+          isSelected={isSelected}
+          onSelect={() => onSelect(element)}
+        />
+      ) : (
+        <div
+          className="drag-handle"
+          style={{ ...getElementStyle(), height: "100%", width: "100%" }}
+          onClick={handleClick}
+          data-element-id={element.id}
+        >
+          {element.type === "image" && element.url ? (
+            <img
+              src={element.url}
+              alt={element.content}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "100%",
+                objectFit: "contain",
+              }}
+              draggable={false}
+            />
+          ) : (
+            <div>
+              {element.content}
+              {isSelected && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "-25px",
+                    left: "0",
+                    background: "rgba(0, 0, 0, 0.8)",
+                    color: "white",
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    fontSize: "10px",
+                    fontWeight: "400",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {element.type}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </Rnd>
   );
 };

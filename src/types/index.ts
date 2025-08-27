@@ -18,6 +18,8 @@ export interface InteractiveElement {
   content: string;
   x: number;
   y: number;
+  width?: number;
+  height?: number;
   timestamp: number;
   endTime: number;
   url?: string;
@@ -46,6 +48,7 @@ export interface VideoPlayerRef {
 export interface VideoPlayerAdminProps {
   elements: InteractiveElement[];
   onAddElement: (x: number, y: number) => void;
+  onTimeUpdate?: (time: number) => void;
 }
 
 export interface VideoPlayerPreviewProps {

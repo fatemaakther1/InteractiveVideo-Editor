@@ -1,3 +1,195 @@
+# Interactive Video Editor
+
+A modern, comprehensive video editing interface that allows you to create interactive video experiences with overlays, questions, buttons, and other dynamic elements.
+
+## ✨ Features
+
+### 🎬 Video Player
+- **Full video loading and playback** - Video properly loads and displays in the center panel
+- **Time synchronization** - Elements appear and disappear based on their defined time ranges
+- **Real-time preview** - See changes immediately as you edit
+
+### ➕ Element Management
+- **Easy element addition** - Click the green "+" button to access a modal with all element types
+- **Automatic right sidebar opening** - When you select an element, the right editing panel opens automatically
+- **Drag & drop interface** - Intuitive element positioning
+
+### 🧩 Interactive Elements
+- **Fully draggable and resizable** - Move and resize elements smoothly within the video frame
+- **Auto-save functionality** - Changes are automatically saved every 10 seconds
+- **Type-specific styling** - Different visual styles for different element types:
+  - Text elements (yellow/orange)
+  - Interactive buttons (purple)
+  - Questions (blue)
+  - Images (green)
+  - Pointers (orange circles)
+  - Openers (blue)
+
+### 🎛️ Right Sidebar Controls
+- **Complete editing interface** with three main tabs:
+  - **Timing & Actions**: Set start/end times, visibility settings, video behavior
+  - **Format**: Text styling, content editing, background colors, typography
+  - **Effects**: Entrance animations and visual effects
+- **Real-time updates** - Changes reflect immediately in the video overlay
+- **Functional text formatting toolbar** with clickable buttons for bold, italic, alignment, etc.
+
+### 👀 Preview Mode
+- **Full simulation** - Test your interactive video exactly as users will experience it
+- **Element interaction** - Click buttons, answer questions, view images
+- **Proper timing** - Elements appear and disappear at the correct times
+- **Modern dark UI** - Professional preview interface
+
+### 💅 Modern UI/UX
+- **TailwindCSS powered** - Clean, modern, and fully responsive design
+- **Smooth animations** - Fade-ins, slide-ins, hover effects
+- **Intuitive workflow** - Logical left-to-right editing process
+- **Auto-save indicators** - Visual feedback when changes are saved
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 16+ 
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd InteractiveVideo-Editor
+```
+
+2. **Install dependencies**
+```bash
+npm install
+```
+
+3. **Start the development server**
+```bash
+npm run dev
+```
+
+4. **Open your browser**
+Navigate to `http://localhost:5173`
+
+## 🎯 Usage Guide
+
+### Creating Interactive Elements
+
+1. **Start with the admin panel** (`/admin` or `/`)
+2. **Click the green "+" button** in the left sidebar
+3. **Select an element type** from the modal:
+   - **Text** - Simple text overlays
+   - **Pointers** - Attention-grabbing indicators  
+   - **Images** - Visual content with optional links
+   - **Openers** - Call-to-action elements
+   - **Interactive Buttons** - Clickable actions
+   - **Interactive Questions** - Quiz/survey elements
+
+### Configuring Elements
+
+1. **Select an element** from the timeline or click it on the video
+2. **Use the right sidebar** to configure:
+   - **Timing**: When the element appears and disappears
+   - **Format**: Visual appearance, text content, colors
+   - **Effects**: Animations and transitions
+
+### Testing Your Video
+
+1. **Save your project** using the Save button
+2. **Click Preview** to switch to preview mode
+3. **Test all interactions** - click elements when they appear
+4. **Go back to admin** to make adjustments
+
+## 🏗️ Project Structure
+
+```
+src/
+├── components/
+│   ├── AdminPanel.tsx          # Main editing interface
+│   ├── PreviewPage.tsx         # Preview/testing mode
+│   ├── VideoPlayerAdmin.tsx    # Video player for editing
+│   ├── VideoPlayerPreview.tsx  # Video player for preview
+│   └── ResizableDraggableElement.tsx # Interactive overlay elements
+├── types/
+│   └── index.ts               # TypeScript definitions
+├── constants/
+│   └── index.ts               # Configuration constants
+├── utils/
+│   └── index.ts               # Utility functions
+└── main.tsx                   # Application entry point
+```
+
+## 🎨 Design System
+
+The application uses a modern design system with:
+
+- **Primary Color**: `#FBAC00` (Golden yellow)
+- **Typography**: Apple system fonts with proper hierarchy
+- **Spacing**: Consistent 8px grid system
+- **Animations**: Smooth 200ms transitions
+- **Responsive**: Mobile-first approach with breakpoints
+
+## 🔧 Technical Details
+
+### Built With
+- **React 18** - Modern React with hooks and functional components
+- **TypeScript** - Full type safety and developer experience
+- **TailwindCSS** - Utility-first CSS framework
+- **Vidstack** - Advanced video player with HTML5 support
+- **react-rnd** - Drag and resize functionality
+- **Vite** - Fast development and build tooling
+
+### Key Features
+- **Time-based element display** - Elements show/hide based on video timeline
+- **Real-time synchronization** - Video time updates drive element visibility
+- **Auto-save** - Project data persisted to localStorage every 10 seconds
+- **Responsive design** - Works on desktop, tablet, and mobile
+- **Modern CSS** - CSS Grid, Flexbox, and modern layout techniques
+
+## 🐛 Troubleshooting
+
+### Video Not Loading
+- Check that the video URL in `src/constants/index.ts` is accessible
+- Ensure your browser supports the video format
+- Check browser console for any errors
+
+### Elements Not Appearing
+- Verify the element's start/end times are set correctly
+- Make sure the current video time falls within the element's range
+- Check that the element is not positioned outside the video bounds
+
+### Styling Issues
+- The app uses TailwindCSS - ensure all styles are properly included
+- Check that no conflicting CSS is overriding the styles
+- Verify that the build process is including all necessary CSS
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🎉 What's New
+
+### Major Improvements Made:
+- ✅ **Fixed video loading** - Video now properly loads and displays
+- ✅ **Fixed element modal** - Green "+" button opens modal, automatically opens right sidebar
+- ✅ **Enhanced drag & resize** - Smooth, professional element manipulation
+- ✅ **Complete right sidebar** - All editing controls now functional
+- ✅ **Time-based display** - Elements appear/disappear at correct times
+- ✅ **Fixed preview mode** - Full interactive preview with proper styling  
+- ✅ **Modern UI/UX** - Migrated to TailwindCSS with responsive design
+- ✅ **Code cleanup** - Removed unused CSS files and components
+
+The Interactive Video Editor is now a fully functional, modern application ready for creating engaging interactive video experiences! 🚀
+
 # Interactive Video Application
 
 A modern, clean interactive video application built with React and TypeScript. This application allows users to create interactive video experiences with various elements like text, buttons, questions, and more.

@@ -1,11 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminToolbar from "./admin/AdminToolbar";
 import ElementSidebar from "./admin/ElementSidebar";
 import VideoCanvas from "./admin/VideoCanvas";
 import InspectorPanel from "./admin/InspectorPanel";
 import ElementTypeSelector from "./elements/ElementTypeSelector";
-import type { ElementType } from "../types";
+import type { ElementType, VideoPlayerRef, InteractiveElement } from "../types";
 import { useElements } from "../hooks/useElements";
 
 const AdminPanel = () => {
@@ -14,6 +14,11 @@ const AdminPanel = () => {
   const [showElementModal, setShowElementModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const videoRef = useRef<VideoPlayerRef>(null);
+
+  const handleSeekVideo = useCallback((time: number) => {
+    videoRef.current?.seek(time);
+  }, []);
 
   const {
     elements,
@@ -22,9 +27,20 @@ const AdminPanel = () => {
     updateElement,
     deleteElement,
     selectElement,
+    bringToFront,
     loadProject,
     saveProject,
   } = useElements(currentTime);
+
+  const handleSelectElement = useCallback((element: InteractiveElement | null) => {
+    if (element) {
+      // Bring the selected element to front when selected
+      bringToFront(element.id);
+      selectElement(element);
+    } else {
+      selectElement(null);
+    }
+  }, [selectElement, bringToFront]);
 
   const handleSaveProject = useCallback(async () => {
     setIsSaving(true);
@@ -53,7 +69,7 @@ const AdminPanel = () => {
     [addElement]
   );
 
-  const onAddElement = useCallback((x: number, y: number) => {
+  const onAddElement = useCallback((_x: number, _y: number) => {
     setShowElementModal(true);
   }, []);
  
@@ -75,15 +91,17 @@ const AdminPanel = () => {
           onAddElement={handleAddElementClick}
           onSelectElement={selectElement}
           onDeleteElement={deleteElement}
+          onSeek={handleSeekVideo}
         />
 
         <VideoCanvas
+          ref={videoRef}
           elements={elements}
           selectedElement={selectedElement}
           currentTime={currentTime}
           onAddElement={onAddElement}
           onUpdateElement={updateElement}
-          onSelectElement={selectElement}
+          onSelectElement={handleSelectElement}
           onTimeUpdate={setCurrentTime}
         />
 

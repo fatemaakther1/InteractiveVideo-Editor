@@ -276,6 +276,7 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
         className="drag-handle"
         style={{ ...getElementStyle(), height: "100%", width: "100%" }}
         onClick={handleClick}
+        data-element-id={element.id}
       >
         {element.type === "image" && element.url ? (
           <img

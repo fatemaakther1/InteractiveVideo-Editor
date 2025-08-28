@@ -89,6 +89,17 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
       top: `${element.y}px`, // Vertical position
       width: element.width ? `${element.width}px` : undefined, // Use configured width if available
       height: element.height ? `${element.height}px` : undefined, // Use configured height if available
+      // Apply formatting styles
+      fontWeight: element.bold ? 'bold' : 'normal',
+      fontStyle: element.italic ? 'italic' : 'normal',
+      textDecoration: [
+        element.underline ? 'underline' : '',
+        element.strikethrough ? 'line-through' : ''
+      ].filter(Boolean).join(' ') || 'none',
+      textAlign: element.textAlign || 'left',
+      color: element.color || 'white',
+      backgroundColor: element.backgroundColor || 'transparent',
+      opacity: element.opacity !== undefined ? element.opacity / 100 : 1,
       ...animationConfig.style, // Add animation CSS variables
     };
 
@@ -219,36 +230,42 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
         padding: '14px',
         borderRadius: '12px',
         fontSize: '14px',
-        fontWeight: '600',
-        boxShadow: '0 8px 25px rgba(37, 99, 235, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15)',
         cursor: 'pointer',
         userSelect: 'none',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        textAlign: 'center',
         wordBreak: 'break-word',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        color: 'white',
         backdropFilter: 'blur(8px)',
+        // Apply formatting styles
+        fontWeight: element.bold ? 'bold' : '600', // Keep some weight for visibility
+        fontStyle: element.italic ? 'italic' : 'normal',
+        textDecoration: [
+          element.underline ? 'underline' : '',
+          element.strikethrough ? 'line-through' : ''
+        ].filter(Boolean).join(' ') || 'none',
+        textAlign: element.textAlign || 'center',
+        color: element.color || 'white',
+        opacity: element.opacity !== undefined ? element.opacity / 100 : 1,
         ...animationConfig.style, // Add animation CSS variables
       };
 
       // Type-specific styling with blue theme variations
       switch (element.type) {
         case 'interactive-button':
-          baseStyle.background = 'rgba(14, 165, 233, 0.95)';
+          baseStyle.background = element.backgroundColor || 'rgba(14, 165, 233, 0.95)';
           baseStyle.border = '3px solid rgba(14, 165, 233, 0.8)';
           baseStyle.boxShadow = '0 8px 25px rgba(14, 165, 233, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)';
           break;
         case 'image':
-          baseStyle.background = 'transparent';
+          baseStyle.background = element.backgroundColor || 'transparent';
           baseStyle.border = 'none';
           baseStyle.padding = '0';
           baseStyle.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.3)';
           break;
         case 'pointer':
-          baseStyle.background = 'rgba(245, 158, 11, 0.95)';
+          baseStyle.background = element.backgroundColor || 'rgba(245, 158, 11, 0.95)';
           baseStyle.border = '3px solid rgba(245, 158, 11, 0.8)';
           baseStyle.borderRadius = '50%';
           baseStyle.width = '48px';
@@ -257,13 +274,13 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
           baseStyle.boxShadow = '0 8px 25px rgba(245, 158, 11, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)';
           break;
         case 'opener':
-          baseStyle.background = 'rgba(59, 130, 246, 0.95)';
+          baseStyle.background = element.backgroundColor || 'rgba(59, 130, 246, 0.95)';
           baseStyle.border = '3px solid rgba(59, 130, 246, 0.8)';
           baseStyle.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)';
           break;
         default:
           // Default blue styling for 'text' and others
-          baseStyle.background = 'rgba(37, 99, 235, 0.95)';
+          baseStyle.background = element.backgroundColor || 'rgba(37, 99, 235, 0.95)';
           baseStyle.border = '3px solid rgba(37, 99, 235, 0.8)';
           baseStyle.boxShadow = '0 8px 25px rgba(37, 99, 235, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)';
           break;
@@ -321,22 +338,16 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
         </MediaPlayer>
 
         {/* Layer that sits on top of the video to show interactive elements */}
-        <div 
-          className="interactive-overlay"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none', // Allow clicks to pass through to video controls
-            zIndex: 10
-          }}
-        >
+        <div className="interactive-overlay" style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          pointerEvents: 'none'
+        }}>
           {/* Show all elements that should be visible at current time */}
-          {getVisibleElements().map((element) =>
-            renderInteractiveElement(element)
-          )}
+          {getVisibleElements().map((element) => renderInteractiveElement(element))}
         </div>
       </div>
     </div>
@@ -344,3 +355,5 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
 };
 
 export default VideoPlayerPreview;
+
+

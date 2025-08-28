@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import TimingInspector from '../inspector/TimingInspector';
-import type { InteractiveElement } from '../../types';
+import InteractiveQuizAdmin from '../quiz/InteractiveQuizAdmin';
+import type { InteractiveElement, InteractiveQuiz } from '../../types';
 
 export interface InspectorPanelProps {
   selectedElement: InteractiveElement | null;
@@ -8,14 +9,23 @@ export interface InspectorPanelProps {
   onDeleteElement: (elementId: string) => void;
 }
 
-type InspectorTab = 'timing' | 'format' | 'effects';
+type InspectorTab = 'timing' | 'format' | 'effects' | 'quiz';
 
 const InspectorPanel: React.FC<InspectorPanelProps> = ({
   selectedElement,
   onUpdateElement,
   onDeleteElement,
 }) => {
-  const [activeTab, setActiveTab] = useState<InspectorTab>('timing');
+  const [activeTab, setActiveTab] = useState<InspectorTab>(
+    selectedElement?.type === 'interactive-quiz' ? 'quiz' : 'timing'
+  );
+  
+  const handleQuizUpdate = (quiz: InteractiveQuiz) => {
+    if (!selectedElement) return;
+    const updatedElement = { ...selectedElement, quiz };
+    onUpdateElement(updatedElement);
+  };
+  
   if (!selectedElement) {
     return (
       <aside className="w-96 bg-white/95 backdrop-blur-sm border-l border-secondary-200 flex flex-col shadow-soft">
@@ -190,37 +200,40 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({
     </div>
   );
 
-  const tabs = [
+  // Base tabs for all elements
+  const baseTabs = [
     {
       id: 'timing',
       label: 'Timing',
       icon: 'fas fa-clock',
-      content: (
-        <TimingInspector
-          element={selectedElement}
-          onUpdate={onUpdateElement}
-          onDelete={() => onDeleteElement(selectedElement.id)}
-        />
-      ),
     },
     {
       id: 'format',
       label: 'Format',
       icon: 'fas fa-palette',
-      content: formatContent,
     },
     {
       id: 'effects',
       label: 'Effects',
       icon: 'fas fa-magic',
-      content: effectsContent,
     },
   ];
+  
+  // Add quiz tab for interactive quiz elements
+  const tabs = selectedElement.type === 'interactive-quiz' 
+    ? [{
+        id: 'quiz',
+        label: 'Quiz',
+        icon: 'fas fa-question-circle',
+      }, ...baseTabs]
+    : baseTabs;
 
   return (
     <aside className="w-96 bg-white/95 backdrop-blur-sm border-l border-secondary-200 flex flex-col shadow-soft">
       <div className="p-4 border-b border-secondary-200">
-        <div className="grid grid-cols-3 gap-2 bg-secondary-100 rounded-xl p-1">
+        <div className={`grid gap-2 bg-secondary-100 rounded-xl p-1 ${
+          selectedElement.type === 'interactive-quiz' ? 'grid-cols-4' : 'grid-cols-3'
+        }`}>
           {tabs.map((tab) => {
             const isActive = tab.id === activeTab;
             return (
@@ -242,6 +255,13 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({
       </div>
       
       <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-white to-secondary-50">
+        {activeTab === 'quiz' && selectedElement.type === 'interactive-quiz' && (
+          <InteractiveQuizAdmin
+            quiz={selectedElement.quiz}
+            onUpdate={handleQuizUpdate}
+            currentTime={selectedElement.timestamp}
+          />
+        )}
         {activeTab === 'timing' && (
           <TimingInspector
             element={selectedElement}

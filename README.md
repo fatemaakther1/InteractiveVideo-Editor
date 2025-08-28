@@ -130,7 +130,7 @@ The application uses a modern design system with:
 - **Animations**: Smooth 200ms transitions
 - **Responsive**: Mobile-first approach with breakpoints
 
-## 🔧 Technical Details
+## 🔧 Technical Details  
 
 ### Built With
 - **React 18** - Modern React with hooks and functional components

@@ -5,12 +5,51 @@ export type ElementType =
   | 'image' 
   | 'opener' 
   | 'interactive-button' 
-  | 'interactive-question';
+  | 'interactive-question'
+  | 'interactive-quiz';
 
 export type QuestionType = 
   | 'multiple-choice' 
   | 'text-input' 
   | 'true-false';
+
+// Quiz System Types
+export interface QuizOption {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+}
+
+export interface QuizQuestion {
+  id: string;
+  questionText: string;
+  type: 'mcq' | 'true-false';
+  options: QuizOption[];
+  startTime: number;
+  endTime: number;
+}
+
+export interface InteractiveQuiz {
+  id: string;
+  title: string;
+  questions: QuizQuestion[];
+  overallStartTime: number;
+  overallEndTime: number;
+}
+
+export interface QuizResponse {
+  questionId: string;
+  selectedOptionId: string;
+  isCorrect: boolean;
+}
+
+export interface QuizResult {
+  quizId: string;
+  responses: QuizResponse[];
+  totalQuestions: number;
+  correctAnswers: number;
+  score: number; // percentage
+}
 
 export interface InteractiveElement {
   id: string;
@@ -27,6 +66,8 @@ export interface InteractiveElement {
   questionType?: QuestionType;
   options?: string[];
   correctAnswer?: string;
+  // Quiz-specific properties
+  quiz?: InteractiveQuiz;
 }
 
 export interface ElementTypeConfig {
@@ -51,10 +92,6 @@ export interface VideoPlayerAdminProps {
   onTimeUpdate?: (time: number) => void;
 }
 
-export interface VideoPlayerPreviewProps {
-  elements: InteractiveElement[];
-}
-
 // UI State Types
 export type TabType = 'element-list' | 'contents';
 
@@ -69,4 +106,22 @@ export interface AnswerState {
 
 export interface ResultsState {
   [key: string]: boolean;
+}
+
+// Quiz Pause Types
+export interface QuizState {
+  isActive: boolean;
+  currentQuizId?: string;
+  isPaused: boolean;
+}
+
+export interface QuizTimestamp {
+  elementId: string;
+  timestamp: number;
+  element: InteractiveElement;
+}
+
+export interface VideoPlayerPreviewProps {
+  elements: InteractiveElement[];
+  enableQuizPause?: boolean;
 }

@@ -13,22 +13,86 @@ import type {
   VideoPlayerPreviewProps,
   AnswerState,
   ResultsState,
+  QuizState,
+  InteractiveQuiz,
+  QuizResult,
 } from "../types";
 import { VIDEO_CONFIG, UI_CONSTANTS } from "../constants";
 import { elementUtils } from "../utils";
+import QuizManager from "./QuizManager";
+import QuizOverlay from "./quiz/QuizOverlay";
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
 
 const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
   elements,
+  enableQuizPause = true,
 }) => {
   // Simple state variables - easy to understand
   const [currentTime, setCurrentTime] = useState(0); // Current video time in seconds
   const [selectedAnswer, setSelectedAnswer] = useState<AnswerState>({}); // User's answers to questions
   const [showResults, setShowResults] = useState<ResultsState>({}); // Show/hide question results
+  
+  // Quiz pause functionality state
+  const [quizState, setQuizState] = useState<QuizState>({
+    isActive: false,
+    currentQuizId: undefined,
+    isPaused: false,
+  });
+  
+  // Interactive quiz state
+  const [activeQuiz, setActiveQuiz] = useState<InteractiveQuiz | null>(null);
+  const [isQuizLocked, setIsQuizLocked] = useState(false);
+  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
+  const [showQuizResult, setShowQuizResult] = useState(false);
 
   // Reference to the video player - allows us to control the video
   const playerRef = useRef<MediaPlayerInstance>(null);
+  
+  // Check for active interactive quizzes
+  useEffect(() => {
+    const quizElements = elements.filter(el => el.type === 'interactive-quiz' && el.quiz);
+    
+    for (const element of quizElements) {
+      const quiz = element.quiz;
+      if (!quiz) continue;
+      
+      // Check if we should start the quiz
+      if (currentTime >= quiz.overallStartTime && currentTime <= quiz.overallEndTime && !activeQuiz && !isQuizLocked) {
+        setActiveQuiz(quiz);
+        setIsQuizLocked(true);
+        handlePauseVideo();
+        break;
+      }
+    }
+  }, [currentTime, elements, activeQuiz, isQuizLocked]);
+  
+  // Handle quiz completion
+  const handleQuizComplete = (result: QuizResult) => {
+    setQuizResult(result);
+    setShowQuizResult(true);
+  };
+  
+  // Handle continuing after quiz results
+  const handleContinueAfterQuiz = () => {
+    setActiveQuiz(null);
+    setIsQuizLocked(false);
+    setQuizResult(null);
+    setShowQuizResult(false);
+    handleResumeVideo();
+  };
+  
+  // Close quiz overlay
+  const handleCloseQuiz = () => {
+    if (quizResult) {
+      handleContinueAfterQuiz();
+    } else {
+      // If closing without completing quiz, still unlock
+      setActiveQuiz(null);
+      setIsQuizLocked(false);
+      handleResumeVideo();
+    }
+  };
 
   // Function to handle clicks on different types of interactive elements
   // This is called when user clicks on buttons, images, etc.
@@ -62,6 +126,37 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
     setTimeout(() => {
       setShowResults((prev) => ({ ...prev, [element.id]: false }));
     }, UI_CONSTANTS.RESULT_AUTO_HIDE_DELAY);
+  };
+
+  // Quiz control functions
+  const handlePauseVideo = () => {
+    if (playerRef.current) {
+      playerRef.current.pause();
+    }
+  };
+
+  const handleResumeVideo = () => {
+    if (playerRef.current) {
+      playerRef.current.play();
+    }
+  };
+
+  const handleQuizStateChange = (newQuizState: QuizState) => {
+    setQuizState(newQuizState);
+  };
+
+  const handleQuizAnswer = (elementId: string, answer: string) => {
+    // Save the answer
+    setSelectedAnswer(prev => ({ ...prev, [elementId]: answer }));
+    
+    // Complete the quiz and resume video
+    setQuizState({
+      isActive: false,
+      currentQuizId: undefined,
+      isPaused: false,
+    });
+    
+    handleResumeVideo();
   };
 
   // Function to get elements that should be visible at current time
@@ -302,12 +397,40 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
 
         {/* Layer that sits on top of the video to show interactive elements */}
         <div className="interactive-overlay">
-          {/* Show all elements that should be visible at current time */}
-          {getVisibleElements().map((element) =>
-            renderInteractiveElement(element)
-          )}
+          {/* Show all elements that should be visible at current time, but hide questions if quiz pause is active */}
+          {getVisibleElements()
+            .filter(element => {
+              // Hide questions when quiz pause is active - they'll be shown in the overlay instead
+              if (enableQuizPause && element.type === 'interactive-question' && quizState.isActive) {
+                return false;
+              }
+              return true;
+            })
+            .map((element) => renderInteractiveElement(element))
+          }
         </div>
       </div>
+
+      {/* Quiz Manager - handles timing and pause logic */}
+      {enableQuizPause && (
+        <QuizManager
+          elements={elements}
+          currentTime={currentTime}
+          onPauseVideo={handlePauseVideo}
+          onResumeVideo={handleResumeVideo}
+          onQuizStateChange={handleQuizStateChange}
+        />
+      )}
+
+      {/* Interactive Quiz Overlay - shows when interactive quiz is active */}
+      {activeQuiz && (
+        <QuizOverlay
+          quiz={activeQuiz}
+          currentTime={currentTime}
+          onQuizComplete={handleQuizComplete}
+          onClose={handleCloseQuiz}
+        />
+      )}
     </div>
   );
 };

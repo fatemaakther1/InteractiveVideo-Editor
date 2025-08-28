@@ -12,6 +12,7 @@ export const ELEMENT_TYPES = [
   { type: 'opener', label: 'Openers', icon: '📂' },
   { type: 'interactive-button', label: 'Interactive Buttons', icon: '👆' },
   { type: 'interactive-question', label: 'Interactive Questions', icon: '❓' },
+  { type: 'interactive-quiz', label: 'Interactive Quiz', icon: '🎯' },
 ] as const;
 
 // Storage Keys

@@ -22,6 +22,8 @@ const ElementTypeSelector: React.FC<ElementTypeSelectorProps> = ({
         return 'from-accent-500 to-accent-600';
       case 'interactive-question':
         return 'from-blue-500 to-blue-600';
+      case 'interactive-quiz':
+        return 'from-indigo-500 to-indigo-600';
       case 'image':
         return 'from-emerald-500 to-emerald-600';
       case 'pointer':
@@ -41,6 +43,8 @@ const ElementTypeSelector: React.FC<ElementTypeSelectorProps> = ({
         return 'Clickable buttons';
       case 'interactive-question':
         return 'Interactive quizzes';
+      case 'interactive-quiz':
+        return 'Multi-question quiz system';
       case 'image':
         return 'Image overlays';
       case 'pointer':

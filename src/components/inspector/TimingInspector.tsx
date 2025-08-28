@@ -16,7 +16,7 @@ const TimingInspector: React.FC<TimingInspectorProps> = ({
   const handleTimestampChange = (field: 'start' | 'end', timeType: 'minutes' | 'seconds', value: number) => {
     const currentTime = field === 'start' ? element.timestamp : element.endTime;
     const minutes = Math.floor(currentTime / 60);
-    const seconds = Math.floor(currentTime % 60);
+    const seconds = currentTime % 60;
 
     let newTime: number;
     if (timeType === 'minutes') {
@@ -25,10 +25,24 @@ const TimingInspector: React.FC<TimingInspectorProps> = ({
       newTime = minutes * 60 + value;
     }
 
-    onUpdate({
-      ...element,
-      [field === 'start' ? 'timestamp' : 'endTime']: newTime,
-    });
+    // Ensure end time is always after start time
+    if (field === 'start' && newTime >= element.endTime) {
+      onUpdate({
+        ...element,
+        timestamp: newTime,
+        endTime: newTime + 1, // Add 1 second buffer
+      });
+    } else if (field === 'end' && newTime <= element.timestamp) {
+      onUpdate({
+        ...element,
+        endTime: element.timestamp + 1, // Add 1 second buffer
+      });
+    } else {
+      onUpdate({
+        ...element,
+        [field === 'start' ? 'timestamp' : 'endTime']: newTime,
+      });
+    }
   };
 
   return (

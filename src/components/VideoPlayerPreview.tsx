@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import {
   MediaPlayer,
   MediaProvider,
@@ -15,7 +15,8 @@ import type {
   ResultsState,
 } from "../types";
 import { VIDEO_CONFIG, UI_CONSTANTS } from "../constants";
-import { elementUtils } from "../utils";
+import { elementUtils, getElementAnimationConfig, addBounceClickHandler, ensureElementAnimations } from "../utils";
+import { createAnswerFeedbackHandler } from "../utils/animationUtils";
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
 
@@ -77,19 +78,26 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
     const isCorrect = selectedAnswer[element.id] === element.correctAnswer;
     // Check if we should show the result
     const showResult = showResults[element.id];
+    
+    // Ensure element has animation properties
+    const elementWithAnimation = ensureElementAnimations(element);
+    const animationConfig = getElementAnimationConfig(elementWithAnimation, 'entrance');
 
-    // Simple positioning - just use the x,y coordinates from the element
-    const elementStyle = {
+    // Element positioning and sizing - use all configured properties
+    const elementStyle: React.CSSProperties = {
       left: `${element.x}px`, // Horizontal position
       top: `${element.y}px`, // Vertical position
+      width: element.width ? `${element.width}px` : undefined, // Use configured width if available
+      height: element.height ? `${element.height}px` : undefined, // Use configured height if available
+      ...animationConfig.style, // Add animation CSS variables
     };
 
     if (element.type === "interactive-question") {
       return (
         <div
           key={element.id}
-          className="absolute bg-white/95 backdrop-blur-md rounded-2xl shadow-large border border-primary-200/50 p-6 min-w-80 max-w-md animate-scale-in"
-          style={elementStyle}
+          className={`absolute bg-white/95 backdrop-blur-md rounded-2xl shadow-large border border-primary-200/50 p-6 min-w-80 max-w-md ${animationConfig.className}`}
+          style={{ ...elementStyle, pointerEvents: 'auto' }}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="space-y-4">
@@ -105,20 +113,23 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
               <div className="space-y-3">
                 {element.questionType === "multiple-choice" && element.options && (
                   <div className="space-y-2">
-                    {element.options.map((option, index) => (
-                      <button
-                        key={index}
-                        className="w-full text-left p-3 rounded-xl border-2 border-secondary-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-200 group"
-                        onClick={() => handleQuestionAnswer(element, option)}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-5 h-5 rounded-full border-2 border-secondary-300 group-hover:border-primary-500 flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-primary-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    {element.options.map((option, index) => {
+                      const answerFeedbackHandler = createAnswerFeedbackHandler(handleQuestionAnswer, element);
+                      return (
+                        <button
+                          key={index}
+                          className="w-full text-left p-3 rounded-xl border-2 border-secondary-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-200 group"
+                          onClick={(e) => answerFeedbackHandler(e, option)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-5 h-5 rounded-full border-2 border-secondary-300 group-hover:border-primary-500 flex items-center justify-center">
+                              <div className="w-2 h-2 rounded-full bg-primary-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            </div>
+                            <span className="text-secondary-800 group-hover:text-primary-800 font-medium">{option}</span>
                           </div>
-                          <span className="text-secondary-800 group-hover:text-primary-800 font-medium">{option}</span>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -126,14 +137,20 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       className="p-4 rounded-xl bg-emerald-50 border-2 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100 text-emerald-800 font-bold transition-all duration-200 transform hover:scale-105"
-                      onClick={() => handleQuestionAnswer(element, "True")}
+                      onClick={(e) => {
+                        const answerFeedbackHandler = createAnswerFeedbackHandler(handleQuestionAnswer, element);
+                        answerFeedbackHandler(e, "True");
+                      }}
                     >
                       <i className="fas fa-check mr-2"></i>
                       True
                     </button>
                     <button
                       className="p-4 rounded-xl bg-red-50 border-2 border-red-200 hover:border-red-400 hover:bg-red-100 text-red-800 font-bold transition-all duration-200 transform hover:scale-105"
-                      onClick={() => handleQuestionAnswer(element, "False")}
+                      onClick={(e) => {
+                        const answerFeedbackHandler = createAnswerFeedbackHandler(handleQuestionAnswer, element);
+                        answerFeedbackHandler(e, "False");
+                      }}
                     >
                       <i className="fas fa-times mr-2"></i>
                       False
@@ -197,6 +214,8 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
         position: 'absolute',
         left: `${element.x}px`,
         top: `${element.y}px`,
+        width: element.width ? `${element.width}px` : '120px',
+        height: element.height ? `${element.height}px` : '50px',
         padding: '14px',
         borderRadius: '12px',
         fontSize: '14px',
@@ -210,9 +229,9 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
         textAlign: 'center',
         wordBreak: 'break-word',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        minWidth: '90px',
         color: 'white',
         backdropFilter: 'blur(8px)',
+        ...animationConfig.style, // Add animation CSS variables
       };
 
       // Type-specific styling with blue theme variations
@@ -256,16 +275,17 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
     return (
       <div
         key={element.id}
-        style={getElementStyle()}
-        onClick={() => handleElementClick(element)}
+        className={animationConfig.className}
+        style={{ ...getElementStyle(), pointerEvents: 'auto' }}
+        onClick={addBounceClickHandler(handleElementClick, elementWithAnimation)}
       >
         {element.type === 'image' && element.url ? (
           <img
             src={element.url}
             alt={element.content}
             style={{
-              maxWidth: '200px',
-              maxHeight: '150px',
+              width: '100%',
+              height: '100%',
               objectFit: 'contain',
             }}
             draggable={false}
@@ -301,7 +321,18 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
         </MediaPlayer>
 
         {/* Layer that sits on top of the video to show interactive elements */}
-        <div className="interactive-overlay">
+        <div 
+          className="interactive-overlay"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none', // Allow clicks to pass through to video controls
+            zIndex: 10
+          }}
+        >
           {/* Show all elements that should be visible at current time */}
           {getVisibleElements().map((element) =>
             renderInteractiveElement(element)

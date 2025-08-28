@@ -16,7 +16,28 @@ export const storage = {
       const saved = localStorage.getItem(STORAGE_KEYS.INTERACTIVE_VIDEO);
       if (saved) {
         const projectData: ProjectData = JSON.parse(saved);
-        return projectData.elements || [];
+        const elements = projectData.elements || [];
+        // Migrate elements without zIndex and animation properties
+        return elements.map((element, index) => {
+          // Ensure element has animation properties (migration)
+          const migratedElement = {
+            ...element,
+            zIndex: element.zIndex !== undefined ? element.zIndex : index + 1,
+            animation: element.animation || {
+              entrance: 'fadeIn',
+              exit: 'fadeOut',
+              interactiveEffects: {
+                pulseWhenVisible: false,
+                bounceOnClick: false,
+                scaleOnHover: true,
+              },
+              duration: 300,
+              delay: 0,
+              easing: 'ease-in-out',
+            }
+          };
+          return migratedElement;
+        });
       }
     } catch (error) {
       console.error('Failed to load project data:', error);
@@ -38,6 +59,7 @@ export const elementUtils = {
   generateId: (): string => Date.now().toString(),
 
   isVisible: (element: InteractiveElement, currentTime: number): boolean => {
+    // Use precise comparison - elements are visible during their time range (inclusive)
     return currentTime >= element.timestamp && currentTime <= element.endTime;
   },
 
@@ -76,3 +98,7 @@ export const format = {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 };
+
+// Export animation utilities
+export * from './elementDefaults';
+export * from './animationUtils';

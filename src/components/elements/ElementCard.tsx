@@ -7,6 +7,7 @@ export interface ElementCardProps {
   isSelected: boolean;
   onSelect: () => void;
   onDelete: () => void;
+  onSeek?: (time: number) => void;
 }
 
 const ElementCard: React.FC<ElementCardProps> = ({
@@ -14,6 +15,7 @@ const ElementCard: React.FC<ElementCardProps> = ({
   isSelected,
   onSelect,
   onDelete,
+  onSeek,
 }) => {
   const getTimeString = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -47,9 +49,14 @@ const ElementCard: React.FC<ElementCardProps> = ({
     onDelete();
   };
 
+  const handleClick = () => {
+    onSelect();
+    onSeek?.(element.timestamp);
+  };
+
   return (
     <div
-      onClick={onSelect}
+      onClick={handleClick}
       className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-soft animate-slide-in group ${
         isSelected
           ? 'border-primary-500 bg-primary-50/50 ring-2 ring-primary-200'

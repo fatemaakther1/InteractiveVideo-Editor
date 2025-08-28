@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { InteractiveElement, ElementType } from '../types';
 import { VIDEO_CONFIG } from '../constants';
-import { storage, elementUtils } from '../utils';
+import { storage, elementUtils, createElementWithDefaults } from '../utils';
 
 export interface UseElementsReturn {
   elements: InteractiveElement[];
@@ -10,6 +10,7 @@ export interface UseElementsReturn {
   updateElement: (updatedElement: InteractiveElement) => void;
   deleteElement: (elementId: string) => void;
   selectElement: (element: InteractiveElement | null) => void;
+  bringToFront: (elementId: string) => void;
   getVisibleElements: (currentTime: number) => InteractiveElement[];
   loadProject: () => void;
   saveProject: () => void;
@@ -42,7 +43,8 @@ export const useElements = (currentTime: number = 0): UseElementsReturn => {
   }, [elements]);
 
   const addElement = useCallback((elementType: ElementType, position = { x: 100, y: 100 }) => {
-    const newElement: InteractiveElement = {
+    const maxZIndex = elements.reduce((max, el) => Math.max(max, el.zIndex || 0), 0);
+    const baseElement = {
       id: elementUtils.generateId(),
       type: elementType,
       content: `New ${elementType.replace('-', ' ')}`,
@@ -50,16 +52,27 @@ export const useElements = (currentTime: number = 0): UseElementsReturn => {
       y: position.y,
       timestamp: currentTime,
       endTime: currentTime + VIDEO_CONFIG.DEFAULT_ELEMENT_DURATION,
+      zIndex: maxZIndex + 1, // Always add new elements on top
     };
+
+    // Use helper to add default animation properties
+    const newElement = createElementWithDefaults(baseElement);
 
     setElements(prev => [...prev, newElement]);
     setSelectedElement(newElement);
-  }, [currentTime]);
+  }, [currentTime, elements]);
 
   const updateElement = useCallback((updatedElement: InteractiveElement) => {
-    setElements(prev =>
-      prev.map(el => el.id === updatedElement.id ? updatedElement : el)
-    );
+    setElements(prev => {
+      const newElements = prev.map(el => el.id === updatedElement.id ? updatedElement : el);
+      // Immediate save when updating element timing or other properties
+      const projectData = {
+        elements: newElements,
+        timestamp: new Date().toISOString(),
+      };
+      storage.save(projectData);
+      return newElements;
+    });
     setSelectedElement(updatedElement);
   }, []);
 
@@ -72,6 +85,18 @@ export const useElements = (currentTime: number = 0): UseElementsReturn => {
 
   const selectElement = useCallback((element: InteractiveElement | null) => {
     setSelectedElement(element);
+  }, []);
+
+  const bringToFront = useCallback((elementId: string) => {
+    setElements(prev => {
+      const maxZIndex = prev.reduce((max, el) => Math.max(max, el.zIndex || 0), 0);
+      const newElements = prev.map(el => 
+        el.id === elementId 
+          ? { ...el, zIndex: maxZIndex + 1 }
+          : el
+      );
+      return newElements;
+    });
   }, []);
 
   const getVisibleElements = useCallback((time: number) => {
@@ -104,6 +129,7 @@ export const useElements = (currentTime: number = 0): UseElementsReturn => {
     updateElement,
     deleteElement,
     selectElement,
+    bringToFront,
     getVisibleElements,
     loadProject,
     saveProject,

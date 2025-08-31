@@ -228,8 +228,6 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
         width: element.width ? `${element.width}px` : '120px',
         height: element.height ? `${element.height}px` : '50px',
         padding: '14px',
-        borderRadius: '12px',
-        fontSize: '14px',
         cursor: 'pointer',
         userSelect: 'none',
         display: 'flex',
@@ -238,18 +236,35 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
         wordBreak: 'break-word',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         backdropFilter: 'blur(8px)',
-        // Apply formatting styles
-        fontWeight: element.bold ? 'bold' : '600', // Keep some weight for visibility
+        // Apply all Advanced Format & Style settings
+        fontFamily: element.fontFamily || 'Inter',
+        fontSize: element.fontSize ? `${element.fontSize}px` : '14px',
+        fontWeight: element.bold ? 'bold' : (element.fontWeight || '600'),
         fontStyle: element.italic ? 'italic' : 'normal',
         textDecoration: [
           element.underline ? 'underline' : '',
           element.strikethrough ? 'line-through' : ''
         ].filter(Boolean).join(' ') || 'none',
+        textTransform: element.textCase || 'none',
         textAlign: element.textAlign || 'center',
         color: element.color || 'white',
+        letterSpacing: element.letterSpacing ? `${element.letterSpacing}px` : 'normal',
+        lineHeight: element.lineHeight || 'normal',
+        borderRadius: element.borderRadius ? `${element.borderRadius}px` : '12px',
         opacity: element.opacity !== undefined ? element.opacity / 100 : 1,
+        // Apply visual effects
+        filter: [
+          element.blur ? `blur(${element.blur}px)` : '',
+          element.brightness !== undefined && element.brightness !== 100 ? `brightness(${element.brightness}%)` : '',
+          element.grayscale ? `grayscale(${element.grayscale}%)` : ''
+        ].filter(Boolean).join(' ') || 'none',
         ...animationConfig.style, // Add animation CSS variables
       };
+      
+      // Apply custom box shadow if specified, otherwise use default
+      if (element.boxShadow) {
+        baseStyle.boxShadow = element.boxShadow;
+      }
 
       // Type-specific styling with blue theme variations
       switch (element.type) {

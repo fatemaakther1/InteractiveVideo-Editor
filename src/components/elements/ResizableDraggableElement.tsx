@@ -25,7 +25,7 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
     onSelect(element);
   };
 
-  const handleDragStop = (e: any, data: any) => {
+  const handleDragStop = (_e: any, data: any) => {
     setIsDragging(false);
     onUpdate({
       ...element,
@@ -35,10 +35,10 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
   };
 
   const handleResizeStop = (
-    e: any,
-    direction: any,
+    _e: any,
+    _direction: any,
     ref: any,
-    delta: any,
+    _delta: any,
     position: any
   ) => {
     setIsResizing(false);
@@ -67,28 +67,61 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
       border: isSelected
         ? "3px solid #2563eb"
         : "2px dashed rgba(255, 255, 255, 0.9)",
-      background: "rgba(37, 99, 235, 0.95)", // primary-600 with opacity
-      color: "white",
       padding: "14px",
-      borderRadius: "12px",
-      fontSize: "14px",
-      fontWeight: "600",
-      boxShadow: isSelected
-        ? "0 8px 25px rgba(37, 99, 235, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)"
-        : "0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 8px rgba(0, 0, 0, 0.1)",
       cursor: isDragging || isResizing ? "grabbing" : "grab",
       userSelect: "none",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      textAlign: "center",
       wordBreak: "break-word",
       transition:
         isDragging || isResizing
           ? "none"
           : "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
       backdropFilter: "blur(8px)",
+      // Apply Advanced Format & Style settings from element properties
+      fontFamily: element.fontFamily || 'Inter',
+      fontSize: element.fontSize ? `${element.fontSize}px` : '14px',
+      fontWeight: element.bold ? 'bold' : (element.fontWeight || '600'),
+      fontStyle: element.italic ? 'italic' : 'normal',
+      textDecoration: [
+        element.underline ? 'underline' : '',
+        element.strikethrough ? 'line-through' : ''
+      ].filter(Boolean).join(' ') || 'none',
+      textTransform: element.textCase || 'none',
+      textAlign: element.textAlign || 'center',
+      color: element.color || 'white',
+      letterSpacing: element.letterSpacing ? `${element.letterSpacing}px` : 'normal',
+      lineHeight: element.lineHeight || 'normal',
+      borderRadius: element.borderRadius ? `${element.borderRadius}px` : '12px',
+      opacity: element.opacity !== undefined ? element.opacity / 100 : 1,
+      // Apply background color from element if specified
+      backgroundColor: element.backgroundColor || 'rgba(37, 99, 235, 0.95)',
+      // Default box shadow
+      boxShadow: isSelected
+        ? "0 8px 25px rgba(37, 99, 235, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)"
+        : "0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 8px rgba(0, 0, 0, 0.1)",
+      // Preserve resizability - ensure pointer events work
+      pointerEvents: 'auto',
     };
+
+    // Apply visual effects without breaking resizability
+    const filters: string[] = [];
+    if (element.blur) filters.push(`blur(${element.blur}px)`);
+    if (element.brightness !== undefined && element.brightness !== 100) {
+      filters.push(`brightness(${element.brightness}%)`);
+    }
+    if (element.grayscale) filters.push(`grayscale(${element.grayscale}%)`);
+    if (filters.length > 0) {
+      baseStyle.filter = filters.join(' ');
+    }
+    
+    // Apply custom box shadow if specified
+    if (element.boxShadow) {
+      baseStyle.boxShadow = isSelected 
+        ? `${element.boxShadow}, 0 0 0 3px rgba(37, 99, 235, 0.3)` // Maintain selection indicator
+        : element.boxShadow;
+    }
 
     // Type-specific styling with blue theme variations
     switch (element.type) {
@@ -176,6 +209,12 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
       }
       disableDragging={false}
       dragHandleClassName="drag-handle"
+      // Ensure resize handles work even with effects applied
+      resizeGrid={[1, 1]}
+      dragGrid={[1, 1]}
+      style={{
+        zIndex: isSelected ? 1000 : element.zIndex || 1,
+      }}
       resizeHandleStyles={{
         top: {
           background: "#2563eb",

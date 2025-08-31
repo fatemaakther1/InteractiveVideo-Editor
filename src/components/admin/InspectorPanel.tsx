@@ -23,7 +23,7 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({
 
   if (!selectedElement) {
     return (
-      <aside className="w-96 bg-white/95 backdrop-blur-sm border-l border-secondary-200 flex flex-col shadow-soft">
+      <aside className="w-[480px] bg-white/95 backdrop-blur-sm border-l border-secondary-200 flex flex-col shadow-soft">
         <div className="flex-1 flex flex-col items-center justify-center h-64 text-gray-500 p-6">
           <i className="fas fa-mouse-pointer text-4xl mb-4 text-gray-300" />
           <p className="text-sm text-center">
@@ -313,7 +313,7 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({
   ];
 
   return (
-    <aside className="w-96 bg-white/95 backdrop-blur-sm border-l border-secondary-200 flex flex-col shadow-soft">
+    <aside className="w-[480px] bg-white/95 backdrop-blur-sm border-l border-secondary-200 flex flex-col shadow-soft">
       <div className="p-4 border-b border-secondary-200">
         <div className="grid grid-cols-3 gap-2 bg-secondary-100 rounded-xl p-1">
           {tabs.map((tab) => {

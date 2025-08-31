@@ -1,5 +1,18 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react';
 import type { InteractiveElement, FontOption, BoxShadowPreset, StylePreset } from '../../types';
+import { 
+  ColorPicker, 
+  RangeSlider, 
+  ToggleGroup, 
+  Select, 
+  FormatButton, 
+  PresetCard, 
+  CollapsibleSection 
+} from '../ui/StyleControls';
+import { 
+  previewStyles, 
+  resetPreviewStyles 
+} from '../../utils/styleUtils';
 
 interface AdvancedFormatPanelProps {
   selectedElement: InteractiveElement;
@@ -37,12 +50,401 @@ const FONT_WEIGHT_OPTIONS = [
   { value: 'extrabold', label: 'Extra Bold', weight: '800' },
 ];
 
-const AdvancedFormatPanel: React.FC<AdvancedFormatPanelProps> = ({
+// Memoized components for performance
+const TextFormattingSection = memo<{ 
+  selectedElement: InteractiveElement;
+  onUpdate: (property: keyof InteractiveElement, value: any) => void;
+  onPreview: (property: keyof InteractiveElement, value: any) => void;
+  onPreviewEnd: () => void;
+}>(({ selectedElement, onUpdate, onPreview, onPreviewEnd }) => {
+  const formatButtons = useMemo(() => [
+    { key: 'bold', icon: 'fa-bold', title: 'Bold', shortcut: 'Ctrl+B' },
+    { key: 'italic', icon: 'fa-italic', title: 'Italic', shortcut: 'Ctrl+I' },
+    { key: 'underline', icon: 'fa-underline', title: 'Underline', shortcut: 'Ctrl+U' },
+    { key: 'strikethrough', icon: 'fa-strikethrough', title: 'Strikethrough' },
+    { key: 'superscript', icon: 'fa-superscript', title: 'Superscript' },
+    { key: 'subscript', icon: 'fa-subscript', title: 'Subscript' },
+  ], []);
+
+  const fontOptions = useMemo(() => FONT_OPTIONS.map(font => ({
+    value: font.value,
+    label: font.label,
+    style: { fontFamily: font.value }
+  })), []);
+
+  const weightOptions = useMemo(() => FONT_WEIGHT_OPTIONS.map(weight => ({
+    value: weight.value,
+    label: weight.label
+  })), []);
+
+  const textCaseOptions = useMemo(() => [
+    { value: 'none', label: 'None' },
+    { value: 'uppercase', label: 'UPPER' },
+    { value: 'lowercase', label: 'lower' },
+    { value: 'capitalize', label: 'Title' },
+  ], []);
+
+  const textAlignOptions = useMemo(() => [
+    { value: 'left', label: 'Left', icon: 'fa-align-left' },
+    { value: 'center', label: 'Center', icon: 'fa-align-center' },
+    { value: 'right', label: 'Right', icon: 'fa-align-right' },
+    { value: 'justify', label: 'Justify', icon: 'fa-align-justify' },
+  ], []);
+
+  return (
+    <div className="space-y-4">
+      {/* Format Buttons */}
+      <div className="grid grid-cols-6 gap-3">
+        {formatButtons.map(({ key, icon, title, shortcut }) => (
+          <FormatButton
+            key={key}
+            isActive={!!selectedElement[key as keyof InteractiveElement]}
+            onClick={() => onUpdate(key as keyof InteractiveElement, !selectedElement[key as keyof InteractiveElement])}
+            onPreview={() => onPreview(key as keyof InteractiveElement, !selectedElement[key as keyof InteractiveElement])}
+            onPreviewEnd={onPreviewEnd}
+            icon={icon}
+            title={title}
+            shortcut={shortcut}
+          />
+        ))}
+      </div>
+
+      {/* Font Family */}
+      <Select
+        label="Font Family"
+        value={selectedElement.fontFamily || 'Inter'}
+        options={fontOptions}
+        onChange={(value) => onUpdate('fontFamily', value)}
+        onPreview={(value) => onPreview('fontFamily', value)}
+        onPreviewEnd={onPreviewEnd}
+      />
+
+      {/* Font Size & Weight */}
+      <div className="grid grid-cols-2 gap-4">
+        <RangeSlider
+          label="Font Size"
+          value={selectedElement.fontSize || 14}
+          min={12}
+          max={72}
+          step={1}
+          unit="px"
+          onChange={(value) => onUpdate('fontSize', value)}
+          onPreview={(value) => onPreview('fontSize', value)}
+          onPreviewEnd={onPreviewEnd}
+        />
+
+        <Select
+          label="Font Weight"
+          value={selectedElement.fontWeight || 'normal'}
+          options={weightOptions}
+          onChange={(value) => onUpdate('fontWeight', value)}
+          onPreview={(value) => onPreview('fontWeight', value)}
+          onPreviewEnd={onPreviewEnd}
+        />
+      </div>
+
+      {/* Text Case */}
+      <ToggleGroup
+        label="Text Case"
+        value={selectedElement.textCase || 'none'}
+        options={textCaseOptions}
+        onChange={(value) => onUpdate('textCase', value)}
+        onPreview={(value) => onPreview('textCase', value)}
+        onPreviewEnd={onPreviewEnd}
+      />
+
+      {/* Colors */}
+      <div className="grid grid-cols-2 gap-4">
+        <ColorPicker
+          label="Text Color"
+          value={selectedElement.color || '#000000'}
+          onChange={(value) => onUpdate('color', value)}
+          onPreview={(value) => onPreview('color', value)}
+          onPreviewEnd={onPreviewEnd}
+        />
+        
+        <ColorPicker
+          label="Highlight Color"
+          value={selectedElement.highlightColor || '#ffff00'}
+          onChange={(value) => onUpdate('highlightColor', value)}
+          onPreview={(value) => onPreview('highlightColor', value)}
+          onPreviewEnd={onPreviewEnd}
+        />
+      </div>
+
+      {/* Text Alignment */}
+      <ToggleGroup
+        label="Text Alignment"
+        value={selectedElement.textAlign || 'left'}
+        options={textAlignOptions}
+        onChange={(value) => onUpdate('textAlign', value)}
+        onPreview={(value) => onPreview('textAlign', value)}
+        onPreviewEnd={onPreviewEnd}
+      />
+    </div>
+  );
+});
+
+const ElementStylingSection = memo<{ 
+  selectedElement: InteractiveElement;
+  onUpdate: (property: keyof InteractiveElement, value: any) => void;
+  onPreview: (property: keyof InteractiveElement, value: any) => void;
+  onPreviewEnd: () => void;
+}>(({ selectedElement, onUpdate, onPreview, onPreviewEnd }) => {
+  const shadowPresets = useMemo(() => BOX_SHADOW_PRESETS, []);
+
+  return (
+    <div className="space-y-4">
+      {/* Letter Spacing & Line Height */}
+      <div className="grid grid-cols-2 gap-4">
+        <RangeSlider
+          label="Letter Spacing"
+          value={selectedElement.letterSpacing || 0}
+          min={-2}
+          max={8}
+          step={0.1}
+          unit="px"
+          onChange={(value) => onUpdate('letterSpacing', value)}
+          onPreview={(value) => onPreview('letterSpacing', value)}
+          onPreviewEnd={onPreviewEnd}
+        />
+
+        <RangeSlider
+          label="Line Height"
+          value={selectedElement.lineHeight || 1.5}
+          min={1}
+          max={3}
+          step={0.1}
+          onChange={(value) => onUpdate('lineHeight', value)}
+          onPreview={(value) => onPreview('lineHeight', value)}
+          onPreviewEnd={onPreviewEnd}
+        />
+      </div>
+
+      {/* Background & Border */}
+      <div className="grid grid-cols-2 gap-4">
+        <ColorPicker
+          label="Background Color"
+          value={selectedElement.backgroundColor || '#ffffff'}
+          onChange={(value) => onUpdate('backgroundColor', value)}
+          onPreview={(value) => onPreview('backgroundColor', value)}
+          onPreviewEnd={onPreviewEnd}
+        />
+        
+        <RangeSlider
+          label="Border Radius"
+          value={selectedElement.borderRadius || 0}
+          min={0}
+          max={50}
+          step={1}
+          unit="px"
+          onChange={(value) => onUpdate('borderRadius', value)}
+          onPreview={(value) => onPreview('borderRadius', value)}
+          onPreviewEnd={onPreviewEnd}
+        />
+      </div>
+
+      {/* Box Shadow */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">Box Shadow</label>
+        <div className="grid grid-cols-3 gap-2">
+          {shadowPresets.map((preset) => (
+            <button
+              key={preset.id}
+              onClick={() => onUpdate('boxShadow', preset.value)}
+              onMouseEnter={() => onPreview('boxShadow', preset.value)}
+              onMouseLeave={onPreviewEnd}
+              className={`p-3 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${
+                selectedElement.boxShadow === preset.value
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-blue-300 hover:bg-blue-50'
+              }`}
+              style={{ boxShadow: preset.value !== 'none' ? preset.value : 'none' }}
+            >
+              {preset.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Visual Effects */}
+      <div className="grid grid-cols-3 gap-4">
+        <RangeSlider
+          label="Blur"
+          value={selectedElement.blur || 0}
+          min={0}
+          max={20}
+          step={0.5}
+          unit="px"
+          onChange={(value) => onUpdate('blur', value)}
+          onPreview={(value) => onPreview('blur', value)}
+          onPreviewEnd={onPreviewEnd}
+        />
+
+        <RangeSlider
+          label="Brightness"
+          value={selectedElement.brightness || 100}
+          min={0}
+          max={200}
+          step={5}
+          unit="%"
+          onChange={(value) => onUpdate('brightness', value)}
+          onPreview={(value) => onPreview('brightness', value)}
+          onPreviewEnd={onPreviewEnd}
+        />
+
+        <RangeSlider
+          label="Grayscale"
+          value={selectedElement.grayscale || 0}
+          min={0}
+          max={100}
+          step={5}
+          unit="%"
+          onChange={(value) => onUpdate('grayscale', value)}
+          onPreview={(value) => onPreview('grayscale', value)}
+          onPreviewEnd={onPreviewEnd}
+        />
+      </div>
+
+      {/* Opacity */}
+      <RangeSlider
+        label="Opacity"
+        value={selectedElement.opacity || 100}
+        min={0}
+        max={100}
+        step={1}
+        unit="%"
+        gradientTrack
+        onChange={(value) => onUpdate('opacity', value)}
+        onPreview={(value) => onPreview('opacity', value)}
+        onPreviewEnd={onPreviewEnd}
+      />
+    </div>
+  );
+});
+
+const LayoutSection = memo<{ 
+  selectedElement: InteractiveElement;
+  onUpdate: (property: keyof InteractiveElement, value: any) => void;
+  onPreview: (property: keyof InteractiveElement, value: any) => void;
+  onPreviewEnd: () => void;
+}>(({ selectedElement, onUpdate, onPreview, onPreviewEnd }) => {
+  const displayOptions = useMemo(() => [
+    { value: 'block', label: 'Block' },
+    { value: 'inline', label: 'Inline' },
+    { value: 'inline-block', label: 'Inline Block' },
+    { value: 'flex', label: 'Flex' },
+    { value: 'grid', label: 'Grid' },
+  ], []);
+
+  const flexDirectionOptions = useMemo(() => [
+    { value: 'row', label: 'Row', icon: 'fa-arrow-right' },
+    { value: 'col', label: 'Column', icon: 'fa-arrow-down' },
+    { value: 'row-reverse', label: 'Row Rev', icon: 'fa-arrow-left' },
+    { value: 'col-reverse', label: 'Col Rev', icon: 'fa-arrow-up' },
+  ], []);
+
+  const alignOptions = useMemo(() => [
+    { value: 'start', label: 'Start' },
+    { value: 'center', label: 'Center' },
+    { value: 'end', label: 'End' },
+    { value: 'stretch', label: 'Stretch' },
+  ], []);
+
+  const justifyOptions = useMemo(() => [
+    { value: 'start', label: 'Start' },
+    { value: 'center', label: 'Center' },
+    { value: 'end', label: 'End' },
+    { value: 'between', label: 'Space Between' },
+    { value: 'around', label: 'Space Around' },
+    { value: 'evenly', label: 'Space Evenly' },
+  ], []);
+
+  return (
+    <div className="space-y-4">
+      {/* Display Type */}
+      <ToggleGroup
+        label="Display Type"
+        value={selectedElement.display || 'block'}
+        options={displayOptions}
+        onChange={(value) => onUpdate('display', value)}
+        onPreview={(value) => onPreview('display', value)}
+        onPreviewEnd={onPreviewEnd}
+      />
+
+      {/* Flex Settings */}
+      {selectedElement.display === 'flex' && (
+        <div className="space-y-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+          <h4 className="text-sm font-semibold text-blue-800">Flex Settings</h4>
+          
+          <ToggleGroup
+            label="Direction"
+            value={selectedElement.flexDirection || 'row'}
+            options={flexDirectionOptions}
+            onChange={(value) => onUpdate('flexDirection', value)}
+            onPreview={(value) => onPreview('flexDirection', value)}
+            onPreviewEnd={onPreviewEnd}
+          />
+          
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              label="Align Items"
+              value={selectedElement.alignItems || 'start'}
+              options={alignOptions}
+              onChange={(value) => onUpdate('alignItems', value)}
+              onPreview={(value) => onPreview('alignItems', value)}
+              onPreviewEnd={onPreviewEnd}
+            />
+            
+            <Select
+              label="Justify Content"
+              value={selectedElement.justifyContent || 'start'}
+              options={justifyOptions}
+              onChange={(value) => onUpdate('justifyContent', value)}
+              onPreview={(value) => onPreview('justifyContent', value)}
+              onPreviewEnd={onPreviewEnd}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Dimensions */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">Width</label>
+          <input
+            type="number"
+            value={selectedElement.width || ''}
+            onChange={(e) => onUpdate('width', parseInt(e.target.value) || undefined)}
+            onFocus={() => onPreview('width', selectedElement.width)}
+            onBlur={onPreviewEnd}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm transition-all duration-200"
+            placeholder="Auto"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">Height</label>
+          <input
+            type="number"
+            value={selectedElement.height || ''}
+            onChange={(e) => onUpdate('height', parseInt(e.target.value) || undefined)}
+            onFocus={() => onPreview('height', selectedElement.height)}
+            onBlur={onPreviewEnd}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm transition-all duration-200"
+            placeholder="Auto"
+          />
+        </div>
+      </div>
+    </div>
+  );
+});
+
+const AdvancedFormatPanel: React.FC<AdvancedFormatPanelProps> = memo(({
   selectedElement,
   onUpdateElement,
 }) => {
-  // Advanced state management
-  const [activeSection, setActiveSection] = useState<string>('text');
+  // State management
   const [responsiveMode, setResponsiveMode] = useState<'sm' | 'md' | 'lg' | 'all'>('all');
   const [presets, setPresets] = useState<StylePreset[]>([]);
   const [selectedText, setSelectedText] = useState('');
@@ -70,15 +472,7 @@ const AdvancedFormatPanel: React.FC<AdvancedFormatPanelProps> = ({
     });
   }, [selectedElement, onUpdateElement]);
 
-  // Toggle text formatting
-  const toggleFormat = useCallback((property: 'bold' | 'italic' | 'underline' | 'strikethrough' | 'superscript' | 'subscript') => {
-    updateProperty(property, !selectedElement[property]);
-  }, [selectedElement, updateProperty]);
-
-  // Set text case
-  const setTextCase = useCallback((textCase: 'none' | 'uppercase' | 'lowercase' | 'capitalize') => {
-    updateProperty('textCase', textCase);
-  }, [updateProperty]);
+  // Note: toggleFormat and setTextCase are handled directly in the FormattingSection component
 
   // Apply formatting to selected text
   const applyToSelection = useCallback((property: string, value: any) => {
@@ -171,38 +565,14 @@ const AdvancedFormatPanel: React.FC<AdvancedFormatPanelProps> = ({
     }
   }, [selectedElement, onUpdateElement]);
 
-  // Collapsible section component
-  const CollapsibleSection: React.FC<{
-    id: string;
-    title: string;
-    icon: string;
-    children: React.ReactNode;
-    defaultOpen?: boolean;
-  }> = ({ id, title, icon, children, defaultOpen = false }) => {
-    const [isOpen, setIsOpen] = useState(defaultOpen || activeSection === id);
+  // Real-time preview handlers
+  const handlePreview = useCallback((property: keyof InteractiveElement, value: any) => {
+    previewStyles(selectedElement.id, property, value, selectedElement);
+  }, [selectedElement]);
 
-    return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-sm">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50/50 rounded-t-2xl transition-colors duration-200"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white">
-              <i className={`fas ${icon} text-sm`} />
-            </div>
-            <span className="font-semibold text-gray-800">{title}</span>
-          </div>
-          <i className={`fas fa-chevron-${isOpen ? 'up' : 'down'} text-gray-500 transition-transform duration-200`} />
-        </button>
-        {isOpen && (
-          <div className="p-4 border-t border-gray-200 space-y-4">
-            {children}
-          </div>
-        )}
-      </div>
-    );
-  };
+  const handlePreviewEnd = useCallback(() => {
+    resetPreviewStyles(selectedElement.id, selectedElement);
+  }, [selectedElement]);
 
   return (
     <div className="space-y-6">
@@ -259,148 +629,12 @@ const AdvancedFormatPanel: React.FC<AdvancedFormatPanelProps> = ({
 
       {/* Smart Text Formatting */}
       <CollapsibleSection id="text" title="Smart Text Formatting" icon="fa-font" defaultOpen>
-        {/* Text Style Buttons */}
-        <div className="grid grid-cols-8 gap-2 mb-4">
-          {[
-            { key: 'bold', icon: 'fa-bold', title: 'Bold (Ctrl+B)' },
-            { key: 'italic', icon: 'fa-italic', title: 'Italic (Ctrl+I)' },
-            { key: 'underline', icon: 'fa-underline', title: 'Underline (Ctrl+U)' },
-            { key: 'strikethrough', icon: 'fa-strikethrough', title: 'Strikethrough' },
-            { key: 'superscript', icon: 'fa-superscript', title: 'Superscript' },
-            { key: 'subscript', icon: 'fa-subscript', title: 'Subscript' },
-          ].map(({ key, icon, title }) => (
-            <button
-              key={key}
-              onClick={() => toggleFormat(key as any)}
-              className={`p-3 rounded-xl transition-all duration-200 transform hover:scale-105 ${
-                selectedElement[key as keyof InteractiveElement]
-                  ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-300 shadow-sm'
-                  : 'bg-gray-50 text-gray-600 hover:bg-blue-50 hover:text-blue-600'
-              }`}
-              title={title}
-            >
-              <i className={`fas ${icon}`} />
-            </button>
-          ))}
-        </div>
-
-        {/* Font Family */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Font Family</label>
-          <select
-            value={selectedElement.fontFamily || 'Inter'}
-            onChange={(e) => updateProperty('fontFamily', e.target.value)}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
-          >
-            {FONT_OPTIONS.map((font) => (
-              <option key={font.value} value={font.value} style={{ fontFamily: font.value }}>
-                {font.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Font Size & Weight */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Font Size</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="range"
-                min="12"
-                max="72"
-                step="1"
-                value={selectedElement.fontSize || 14}
-                onChange={(e) => updateProperty('fontSize', parseInt(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <span className="text-sm font-mono text-gray-600 min-w-[3rem] text-center">
-                {selectedElement.fontSize || 14}px
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Font Weight</label>
-            <select
-              value={selectedElement.fontWeight || 'normal'}
-              onChange={(e) => updateProperty('fontWeight', e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
-            >
-              {FONT_WEIGHT_OPTIONS.map((weight) => (
-                <option key={weight.value} value={weight.value}>
-                  {weight.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Text Case Toggle */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Text Case</label>
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { value: 'none', label: 'None' },
-              { value: 'uppercase', label: 'UPPER' },
-              { value: 'lowercase', label: 'lower' },
-              { value: 'capitalize', label: 'Title' },
-            ].map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => setTextCase(value as any)}
-                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                  (selectedElement.textCase || 'none') === value
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Text & Highlight Colors */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Text Color</label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="color"
-                value={selectedElement.color || '#000000'}
-                onChange={(e) => updateProperty('color', e.target.value)}
-                className="w-12 h-10 border border-gray-200 rounded-lg cursor-pointer shadow-sm"
-              />
-              <input
-                type="text"
-                value={selectedElement.color || '#000000'}
-                onChange={(e) => updateProperty('color', e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg font-mono text-sm"
-                placeholder="#000000"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Highlight Color</label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="color"
-                value={selectedElement.highlightColor || '#ffff00'}
-                onChange={(e) => updateProperty('highlightColor', e.target.value)}
-                className="w-12 h-10 border border-gray-200 rounded-lg cursor-pointer shadow-sm"
-              />
-              <input
-                type="text"
-                value={selectedElement.highlightColor || '#ffff00'}
-                onChange={(e) => updateProperty('highlightColor', e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg font-mono text-sm"
-                placeholder="#ffff00"
-              />
-            </div>
-          </div>
-        </div>
+        <TextFormattingSection
+          selectedElement={selectedElement}
+          onUpdate={updateProperty}
+          onPreview={handlePreview}
+          onPreviewEnd={handlePreviewEnd}
+        />
       </CollapsibleSection>
 
       {/* Live Content Editor */}
@@ -431,10 +665,18 @@ const AdvancedFormatPanel: React.FC<AdvancedFormatPanelProps> = ({
               fontSize: `${selectedElement.fontSize || 14}px`,
               fontWeight: selectedElement.fontWeight || 'normal',
               textTransform: selectedElement.textCase || 'none',
-              textAlign: selectedElement.textAlign || 'left',
+              textAlign: selectedElement.textAlign || 'right', // Fix: Default to right for better RTL support
               color: selectedElement.color || '#000000',
               letterSpacing: selectedElement.letterSpacing ? `${selectedElement.letterSpacing}px` : 'normal',
               lineHeight: selectedElement.lineHeight || 'normal',
+              // Apply formatting styles
+              fontStyle: selectedElement.italic ? 'italic' : 'normal',
+              textDecoration: [
+                selectedElement.underline ? 'underline' : '',
+                selectedElement.strikethrough ? 'line-through' : ''
+              ].filter(Boolean).join(' ') || 'none',
+              backgroundColor: selectedElement.backgroundColor || 'transparent',
+              opacity: selectedElement.opacity !== undefined ? selectedElement.opacity / 100 : 1,
             }}
             suppressContentEditableWarning={true}
             dangerouslySetInnerHTML={{ __html: selectedElement.content || 'Enter your content here...' }}
@@ -469,336 +711,22 @@ const AdvancedFormatPanel: React.FC<AdvancedFormatPanelProps> = ({
 
       {/* Advanced Element Styling */}
       <CollapsibleSection id="styling" title="Advanced Element Styling" icon="fa-magic">
-        {/* Letter Spacing & Line Height */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Letter Spacing</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="range"
-                min="-2"
-                max="8"
-                step="0.1"
-                value={selectedElement.letterSpacing || 0}
-                onChange={(e) => updateProperty('letterSpacing', parseFloat(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <span className="text-sm font-mono text-gray-600 min-w-[3rem] text-center">
-                {selectedElement.letterSpacing || 0}px
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Line Height</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="range"
-                min="1"
-                max="3"
-                step="0.1"
-                value={selectedElement.lineHeight || 1.5}
-                onChange={(e) => updateProperty('lineHeight', parseFloat(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <span className="text-sm font-mono text-gray-600 min-w-[3rem] text-center">
-                {selectedElement.lineHeight || 1.5}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Text Alignment */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Text Alignment</label>
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { value: 'left', icon: 'fa-align-left', title: 'Left' },
-              { value: 'center', icon: 'fa-align-center', title: 'Center' },
-              { value: 'right', icon: 'fa-align-right', title: 'Right' },
-              { value: 'justify', icon: 'fa-align-justify', title: 'Justify' },
-            ].map(({ value, icon, title }) => (
-              <button
-                key={value}
-                onClick={() => updateProperty('textAlign', value)}
-                className={`p-3 rounded-xl transition-all duration-200 ${
-                  (selectedElement.textAlign || 'left') === value
-                    ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-300'
-                    : 'bg-gray-50 text-gray-600 hover:bg-blue-50 hover:text-blue-600'
-                }`}
-                title={title}
-              >
-                <i className={`fas ${icon}`} />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Background Color & Border Radius */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Background Color</label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="color"
-                value={selectedElement.backgroundColor || '#ffffff'}
-                onChange={(e) => updateProperty('backgroundColor', e.target.value)}
-                className="w-12 h-10 border border-gray-200 rounded-lg cursor-pointer shadow-sm"
-              />
-              <input
-                type="text"
-                value={selectedElement.backgroundColor || '#ffffff'}
-                onChange={(e) => updateProperty('backgroundColor', e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg font-mono text-sm"
-                placeholder="#ffffff"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Border Radius</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="range"
-                min="0"
-                max="50"
-                step="1"
-                value={selectedElement.borderRadius || 0}
-                onChange={(e) => updateProperty('borderRadius', parseInt(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <span className="text-sm font-mono text-gray-600 min-w-[3rem] text-center">
-                {selectedElement.borderRadius || 0}px
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Box Shadow Presets */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Box Shadow</label>
-          <div className="grid grid-cols-3 gap-2">
-            {BOX_SHADOW_PRESETS.map((preset) => (
-              <button
-                key={preset.id}
-                onClick={() => updateProperty('boxShadow', preset.value)}
-                className={`p-3 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${
-                  selectedElement.boxShadow === preset.value
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-blue-300 hover:bg-blue-50'
-                }`}
-                style={{ boxShadow: preset.value !== 'none' ? preset.value : 'none' }}
-              >
-                {preset.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Visual Effects */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Blur</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="range"
-                min="0"
-                max="20"
-                step="0.5"
-                value={selectedElement.blur || 0}
-                onChange={(e) => updateProperty('blur', parseFloat(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <span className="text-sm font-mono text-gray-600 min-w-[3rem] text-center">
-                {selectedElement.blur || 0}px
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Brightness</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="range"
-                min="0"
-                max="200"
-                step="5"
-                value={selectedElement.brightness || 100}
-                onChange={(e) => updateProperty('brightness', parseInt(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <span className="text-sm font-mono text-gray-600 min-w-[3rem] text-center">
-                {selectedElement.brightness || 100}%
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Grayscale</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="5"
-                value={selectedElement.grayscale || 0}
-                onChange={(e) => updateProperty('grayscale', parseInt(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <span className="text-sm font-mono text-gray-600 min-w-[3rem] text-center">
-                {selectedElement.grayscale || 0}%
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Opacity Control */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Opacity</label>
-          <div className="flex items-center space-x-3">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              value={selectedElement.opacity || 100}
-              onChange={(e) => updateProperty('opacity', parseInt(e.target.value))}
-              className="flex-1 h-3 bg-gradient-to-r from-transparent to-blue-500 rounded-lg appearance-none cursor-pointer"
-              style={{
-                background: `linear-gradient(to right, 
-                  rgba(59, 130, 246, 0.2) 0%, 
-                  rgba(59, 130, 246, 0.8) ${selectedElement.opacity || 100}%, 
-                  rgba(156, 163, 175, 0.3) ${selectedElement.opacity || 100}%, 
-                  rgba(156, 163, 175, 0.3) 100%)`
-              }}
-            />
-            <span className="text-sm font-mono font-bold text-gray-700 min-w-[3.5rem] text-center">
-              {selectedElement.opacity || 100}%
-            </span>
-          </div>
-        </div>
+        <ElementStylingSection
+          selectedElement={selectedElement}
+          onUpdate={updateProperty}
+          onPreview={handlePreview}
+          onPreviewEnd={handlePreviewEnd}
+        />
       </CollapsibleSection>
 
       {/* Layout & Responsive Controls */}
       <CollapsibleSection id="layout" title="Layout & Responsive Controls" icon="fa-th-large">
-        {/* Display Type */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Display Type</label>
-          <div className="grid grid-cols-5 gap-2">
-            {[
-              { value: 'block', label: 'Block' },
-              { value: 'inline', label: 'Inline' },
-              { value: 'inline-block', label: 'Inline Block' },
-              { value: 'flex', label: 'Flex' },
-              { value: 'grid', label: 'Grid' },
-            ].map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => updateProperty('display', value)}
-                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                  (selectedElement.display || 'block') === value
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Flex Settings (show when display is flex) */}
-        {selectedElement.display === 'flex' && (
-          <div className="space-y-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
-            <h4 className="text-sm font-semibold text-blue-800">Flex Settings</h4>
-            
-            <div className="grid grid-cols-1 gap-4">
-              {/* Flex Direction */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-blue-700">Direction</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { value: 'row', label: 'Row', icon: 'fa-arrow-right' },
-                    { value: 'col', label: 'Column', icon: 'fa-arrow-down' },
-                    { value: 'row-reverse', label: 'Row Rev', icon: 'fa-arrow-left' },
-                    { value: 'col-reverse', label: 'Col Rev', icon: 'fa-arrow-up' },
-                  ].map(({ value, label, icon }) => (
-                    <button
-                      key={value}
-                      onClick={() => updateProperty('flexDirection', value)}
-                      className={`px-2 py-2 text-xs font-medium rounded-lg transition-all duration-200 flex items-center justify-center space-x-1 ${
-                        (selectedElement.flexDirection || 'row') === value
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white text-blue-600 hover:bg-blue-100'
-                      }`}
-                    >
-                      <i className={`fas ${icon}`} />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Align Items & Justify Content */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-blue-700">Align Items</label>
-                  <select
-                    value={selectedElement.alignItems || 'start'}
-                    onChange={(e) => updateProperty('alignItems', e.target.value)}
-                    className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
-                  >
-                    <option value="start">Start</option>
-                    <option value="center">Center</option>
-                    <option value="end">End</option>
-                    <option value="stretch">Stretch</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-blue-700">Justify Content</label>
-                  <select
-                    value={selectedElement.justifyContent || 'start'}
-                    onChange={(e) => updateProperty('justifyContent', e.target.value)}
-                    className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
-                  >
-                    <option value="start">Start</option>
-                    <option value="center">Center</option>
-                    <option value="end">End</option>
-                    <option value="between">Space Between</option>
-                    <option value="around">Space Around</option>
-                    <option value="evenly">Space Evenly</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Width & Height */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Width</label>
-            <input
-              type="number"
-              value={selectedElement.width || ''}
-              onChange={(e) => updateProperty('width', parseInt(e.target.value) || undefined)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
-              placeholder="Auto"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Height</label>
-            <input
-              type="number"
-              value={selectedElement.height || ''}
-              onChange={(e) => updateProperty('height', parseInt(e.target.value) || undefined)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
-              placeholder="Auto"
-            />
-          </div>
-        </div>
+        <LayoutSection
+          selectedElement={selectedElement}
+          onUpdate={updateProperty}
+          onPreview={handlePreview}
+          onPreviewEnd={handlePreviewEnd}
+        />
       </CollapsibleSection>
 
       {/* Presets System */}
@@ -806,35 +734,31 @@ const AdvancedFormatPanel: React.FC<AdvancedFormatPanelProps> = ({
         <CollapsibleSection id="presets" title="Saved Presets" icon="fa-bookmark">
           <div className="grid grid-cols-2 gap-3">
             {presets.map((preset) => (
-              <div
+              <PresetCard
                 key={preset.id}
-                className="p-3 bg-gray-50 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-semibold text-gray-800">{preset.name}</h4>
-                  <button
-                    onClick={() => {
-                      setPresets(presets.filter(p => p.id !== preset.id));
-                      savePresets(presets.filter(p => p.id !== preset.id));
-                    }}
-                    className="text-red-500 hover:text-red-700 text-xs"
-                  >
-                    <i className="fas fa-trash" />
-                  </button>
-                </div>
-                <button
-                  onClick={() => applyPreset(preset)}
-                  className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
-                >
-                  Apply Preset
-                </button>
-              </div>
+                preset={preset}
+                onApply={() => applyPreset(preset)}
+                onDelete={() => {
+                  const newPresets = presets.filter(p => p.id !== preset.id);
+                  savePresets(newPresets);
+                }}
+                onPreview={() => {
+                  // Apply all preset styles as preview
+                  Object.entries(preset.styles).forEach(([property, value]) => {
+                    if (value !== undefined) {
+                      handlePreview(property as keyof InteractiveElement, value);
+                    }
+                  });
+                }}
+                onPreviewEnd={handlePreviewEnd}
+              />
             ))}
           </div>
         </CollapsibleSection>
       )}
-    </div>
-  );
-};
+      </div>
+
+  )}
+)
 
 export default AdvancedFormatPanel;

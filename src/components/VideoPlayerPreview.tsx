@@ -274,9 +274,9 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
           baseStyle.boxShadow = '0 8px 25px rgba(14, 165, 233, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)';
           break;
         case 'image':
-          baseStyle.background = element.backgroundColor || 'transparent';
-          baseStyle.border = 'none';
-          baseStyle.padding = '0';
+          baseStyle.background = element.url ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.95)';
+          baseStyle.border = element.url ? 'none' : '2px solid rgba(16, 185, 129, 0.8)';
+          baseStyle.padding = element.url ? '0' : '14px';
           baseStyle.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.3)';
           break;
         case 'pointer':
@@ -311,17 +311,26 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
         style={{ ...getElementStyle(), pointerEvents: 'auto' }}
         onClick={addBounceClickHandler(handleElementClick, elementWithAnimation)}
       >
-        {element.type === 'image' && element.url ? (
-          <img
-            src={element.url}
-            alt={element.content}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-            }}
-            draggable={false}
-          />
+        {element.type === 'image' ? (
+          element.url ? (
+            <img
+              src={element.url}
+              alt={element.content}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+              }}
+              draggable={false}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-white/70">
+              <div className="text-center">
+                <i className="fas fa-plus text-4xl mb-2"></i>
+                <div className="text-sm font-medium">No Image</div>
+              </div>
+            </div>
+          )
         ) : element.type === 'pointer' ? (
           '👆'
         ) : (
@@ -330,6 +339,7 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
       </div>
     );
   };
+  
 
   // Main render - this is what gets displayed on the page
   return (

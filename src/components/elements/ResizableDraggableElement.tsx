@@ -145,13 +145,18 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
           : "0 6px 20px rgba(0, 0, 0, 0.15)";
         break;
       case "image":
-        baseStyle.background = "rgba(16, 185, 129, 0.95)"; // emerald-500
+        // Use transparent background if image URL exists, emerald background if not
+        baseStyle.background = element.url ? "rgba(16, 185, 129, 0.1)" : "rgba(16, 185, 129, 0.95)";
         baseStyle.border = isSelected
           ? "3px solid #10b981"
           : "2px solid rgba(16, 185, 129, 0.8)";
         baseStyle.boxShadow = isSelected
           ? "0 8px 25px rgba(16, 185, 129, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)"
           : "0 6px 20px rgba(0, 0, 0, 0.15)";
+        // Reduce padding when image is present
+        if (element.url) {
+          baseStyle.padding = "4px";
+        }
         break;
       case "pointer":
         baseStyle.background = "rgba(245, 158, 11, 0.95)"; // amber-500
@@ -326,17 +331,28 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
           onClick={handleClick}
           data-element-id={element.id}
         >
-          {element.type === "image" && element.url ? (
-            <img
-              src={element.url}
-              alt={element.content}
-              style={{
-                maxWidth: "100%",
-                maxHeight: "100%",
-                objectFit: "contain",
-              }}
-              draggable={false}
-            />
+          {element.type === "image" ? (
+            element.url ? (
+              <img
+                src={element.url}
+                alt={element.content}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  objectFit: "contain",
+                  borderRadius: "8px",
+                }}
+                draggable={false}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-white/90">
+                <div className="text-center">
+                  <i className="fas fa-plus text-3xl mb-2"></i>
+                  <div className="text-sm font-medium">Add Image</div>
+                  <div className="text-xs opacity-75">Set URL in Inspector</div>
+                </div>
+              </div>
+            )
           ) : (
             <div>
               {element.content}

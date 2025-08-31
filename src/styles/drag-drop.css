@@ -1,0 +1,68 @@
+/* Drag and Drop Styles */
+.rnd-dragging {
+  z-index: 9999 !important;
+  pointer-events: none;
+}
+
+.rnd-dragging .drag-handle {
+  cursor: grabbing !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 12px 35px rgba(37, 99, 235, 0.5), 0 8px 20px rgba(0, 0, 0, 0.25) !important;
+  border: 3px solid #2563eb !important;
+}
+
+.rnd-drag-preview {
+  opacity: 0.9 !important;
+  transform: rotate(2deg) scale(1.02) !important;
+  transition: none !important;
+}
+
+/* Hide resize handles during dragging */
+.rnd-dragging .react-resizable-handle {
+  display: none !important;
+}
+
+/* Enhanced visual feedback for dragging */
+.rnd-dragging::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  background: rgba(37, 99, 235, 0.1);
+  border: 2px dashed #2563eb;
+  border-radius: 16px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Smooth transitions for non-dragging states */
+.rnd:not(.rnd-dragging) {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom resize handle styles */
+.resize-handle-corner {
+  transition: all 0.2s ease-out;
+}
+
+.resize-handle-corner:hover {
+  transform: scale(1.2) !important;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6) !important;
+}
+
+.resize-handle-top,
+.resize-handle-right,
+.resize-handle-bottom,
+.resize-handle-left {
+  transition: all 0.2s ease-out;
+}
+
+.resize-handle-top:hover,
+.resize-handle-right:hover,
+.resize-handle-bottom:hover,
+.resize-handle-left:hover {
+  background: #1d4ed8 !important;
+  transform: scale(1.1) !important;
+}

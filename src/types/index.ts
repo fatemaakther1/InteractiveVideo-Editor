@@ -12,13 +12,6 @@ export type AnimationType =
 
 export type EasingType = 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'linear';
 
-// Interactive Effect Types for Answer Selection
-export interface AnswerEffects {
-  correct?: AnimationType; // Effect for correct answers
-  incorrect?: AnimationType; // Effect for incorrect answers  
-  neutral?: AnimationType; // Effect for neutral selections
-}
-
 export interface InteractiveEffects {
   pulseWhenVisible?: boolean;
   bounceOnClick?: boolean;
@@ -29,7 +22,6 @@ export interface AnimationConfig {
   entrance?: AnimationType;
   exit?: AnimationType;
   interactiveEffects?: InteractiveEffects;
-  answerEffects?: AnswerEffects; // New property for answer feedback
   duration?: number;
   delay?: number;
   easing?: EasingType;
@@ -39,12 +31,9 @@ export interface AnimationConfig {
 export type ElementType = 
   | 'text' 
   | 'interactive-button' 
-  | 'interactive-question' 
   | 'image' 
   | 'pointer' 
   | 'opener';
-
-export type QuestionType = 'single-choice' | 'multiple-choice' | 'true-false' | 'text-input';
 
 // Main Interactive Element Interface
 export interface InteractiveElement {
@@ -58,11 +47,6 @@ export interface InteractiveElement {
   timestamp: number;
   endTime: number;
   zIndex?: number;
-  
-  // Question-specific properties
-  questionType?: QuestionType;
-  options?: string[];
-  correctAnswer?: string;
   
   // Image-specific properties
   url?: string;
@@ -127,14 +111,6 @@ export interface InteractiveElement {
   animation?: AnimationConfig;
 }
 
-// State interfaces for VideoPlayer
-export interface AnswerState {
-  [elementId: string]: string;
-}
-
-export interface ResultsState {
-  [elementId: string]: boolean;
-}
 
 // Project data structure
 export interface ProjectData {
@@ -147,19 +123,6 @@ export interface VideoPlayerPreviewProps {
   elements: InteractiveElement[];
 }
 
-// Answer feedback specific types
-export interface AnswerFeedbackConfig {
-  showImmediate: boolean; // Show feedback immediately on selection
-  duration: number; // How long to show the effect
-  correctEffect: AnimationType;
-  incorrectEffect: AnimationType;
-  neutralEffect?: AnimationType;
-}
-
-// Enhanced question element with answer effects
-export interface QuestionElementWithEffects extends InteractiveElement {
-  answerFeedback?: AnswerFeedbackConfig;
-}
 
 // Video Player related types
 export interface VideoPlayerRef {

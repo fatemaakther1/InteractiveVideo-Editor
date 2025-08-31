@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Rnd } from "react-rnd";
 import type { InteractiveElement } from "../../types";
-import MCQPreview from "../admin/MCQPreview";
+import '../../styles/drag-drop.css';
 
 interface ResizableDraggableElementProps {
   element: InteractiveElement;
@@ -25,8 +25,14 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
     onSelect(element);
   };
 
+  const handleDrag = (_e: any, data: any) => {
+    // Don't update the actual element position during dragging
+    // react-rnd will handle the visual positioning
+  };
+
   const handleDragStop = (_e: any, data: any) => {
     setIsDragging(false);
+    // Final update when drag ends
     onUpdate({
       ...element,
       x: data.x,
@@ -134,16 +140,6 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
           ? "0 8px 25px rgba(14, 165, 233, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)"
           : "0 6px 20px rgba(0, 0, 0, 0.15)";
         break;
-      case "interactive-question":
-        baseStyle.background = "rgba(59, 130, 246, 0.95)"; // blue-500
-        baseStyle.border = isSelected
-          ? "3px solid #3b82f6"
-          : "2px solid rgba(59, 130, 246, 0.8)";
-        baseStyle.minWidth = "220px";
-        baseStyle.boxShadow = isSelected
-          ? "0 8px 25px rgba(59, 130, 246, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)"
-          : "0 6px 20px rgba(0, 0, 0, 0.15)";
-        break;
       case "image":
         // Use transparent background if image URL exists, emerald background if not
         baseStyle.background = element.url ? "rgba(16, 185, 129, 0.1)" : "rgba(16, 185, 129, 0.95)";
@@ -192,6 +188,7 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
         y: element.y,
       }}
       onDragStart={handleDragStart}
+      onDrag={handleDrag}
       onDragStop={handleDragStop}
       onResizeStart={() => setIsResizing(true)}
       onResizeStop={handleResizeStop}
@@ -217,6 +214,8 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
       // Ensure resize handles work even with effects applied
       resizeGrid={[1, 1]}
       dragGrid={[1, 1]}
+      // Add CSS class for drag state
+      className={isDragging ? 'rnd-dragging' : 'rnd'}
       style={{
         zIndex: isSelected ? 1000 : element.zIndex || 1,
       }}
@@ -317,67 +316,58 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
         topLeft: "resize-handle-corner",
       }}
     >
-      {/* Render interactive-question elements with MCQPreview */}
-      {element.type === "interactive-question" ? (
-        <MCQPreview
-          element={element}
-          isSelected={isSelected}
-          onSelect={() => onSelect(element)}
-        />
-      ) : (
-        <div
-          className="drag-handle"
-          style={{ ...getElementStyle(), height: "100%", width: "100%" }}
-          onClick={handleClick}
-          data-element-id={element.id}
-        >
-          {element.type === "image" ? (
-            element.url ? (
-              <img
-                src={element.url}
-                alt={element.content}
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "100%",
-                  objectFit: "contain",
-                  borderRadius: "8px",
-                }}
-                draggable={false}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white/90">
-                <div className="text-center">
-                  <i className="fas fa-plus text-3xl mb-2"></i>
-                  <div className="text-sm font-medium">Add Image</div>
-                  <div className="text-xs opacity-75">Set URL in Inspector</div>
-                </div>
-              </div>
-            )
+      <div
+        className="drag-handle"
+        style={{ ...getElementStyle(), height: "100%", width: "100%" }}
+        onClick={handleClick}
+        data-element-id={element.id}
+      >
+        {element.type === "image" ? (
+          element.url ? (
+            <img
+              src={element.url}
+              alt={element.content}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "100%",
+                objectFit: "contain",
+                borderRadius: "8px",
+              }}
+              draggable={false}
+            />
           ) : (
-            <div>
-              {element.content}
-              {isSelected && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "-25px",
-                    left: "0",
-                    background: "rgba(0, 0, 0, 0.8)",
-                    color: "white",
-                    padding: "2px 8px",
-                    borderRadius: "4px",
-                    fontSize: "10px",
-                    fontWeight: "400",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {element.type}
-                </div>
-              )}
+            <div className="w-full h-full flex items-center justify-center text-white/90">
+              <div className="text-center">
+                <i className="fas fa-plus text-3xl mb-2"></i>
+                <div className="text-sm font-medium">Add Image</div>
+                <div className="text-xs opacity-75">Set URL in Inspector</div>
+              </div>
             </div>
-          )}
-        </div>
-      )}
+          )
+        ) : (
+          <div>
+            {element.content}
+            {isSelected && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "-25px",
+                  left: "0",
+                  background: "rgba(0, 0, 0, 0.8)",
+                  color: "white",
+                  padding: "2px 8px",
+                  borderRadius: "4px",
+                  fontSize: "10px",
+                  fontWeight: "400",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {element.type}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </Rnd>
   );
 };

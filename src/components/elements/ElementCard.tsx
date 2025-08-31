@@ -31,8 +31,6 @@ const ElementCard: React.FC<ElementCardProps> = ({
         return 'bg-primary-100 text-primary-800';
       case 'interactive-button':
         return 'bg-accent-100 text-accent-800';
-      case 'interactive-question':
-        return 'bg-blue-100 text-blue-800';
       case 'image':
         return 'bg-emerald-100 text-emerald-800';
       case 'pointer':

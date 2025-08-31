@@ -79,7 +79,7 @@ const VideoPlayerAdmin = forwardRef<VideoPlayerRef, VideoPlayerAdminProps>(
             top: `${element.y}px`,
             width: element.width ? `${element.width}px` : '120px',
             height: element.height ? `${element.height}px` : '50px',
-            minWidth: element.type === "interactive-question" ? "200px" : "auto",
+            minWidth: "auto",
             border: '2px dashed rgba(255, 255, 255, 0.5)',
             borderRadius: '8px',
             backgroundColor: 'rgba(0, 0, 0, 0.1)',

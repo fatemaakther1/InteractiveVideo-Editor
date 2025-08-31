@@ -44,17 +44,6 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
     onUpdate(updated);
   }, [localQuestion, onUpdate]);
 
-  const handleStartTimeChange = useCallback((time: number) => {
-    const updated = { ...localQuestion, startTime: time };
-    setLocalQuestion(updated);
-    onUpdate(updated);
-  }, [localQuestion, onUpdate]);
-
-  const handleEndTimeChange = useCallback((time: number) => {
-    const updated = { ...localQuestion, endTime: time };
-    setLocalQuestion(updated);
-    onUpdate(updated);
-  }, [localQuestion, onUpdate]);
 
   const handleAddOption = useCallback(() => {
     if (localQuestion.type === 'true-false') return; // Can't add options to true/false
@@ -162,37 +151,6 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
         </div>
       </div>
 
-      {/* Timing Controls */}
-      <div className="mb-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Start Time (seconds)
-            </label>
-            <input
-              type="number"
-              value={localQuestion.startTime}
-              onChange={(e) => handleStartTimeChange(Number(e.target.value))}
-              min="0"
-              step="0.1"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              End Time (seconds)
-            </label>
-            <input
-              type="number"
-              value={localQuestion.endTime}
-              onChange={(e) => handleEndTimeChange(Number(e.target.value))}
-              min={localQuestion.startTime}
-              step="0.1"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-      </div>
 
       {/* Options */}
       <div className="mb-4">

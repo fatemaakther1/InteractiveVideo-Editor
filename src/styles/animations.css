@@ -1,0 +1,227 @@
+/* Answer Feedback Animations */
+
+/* Success animations (for correct answers) */
+@keyframes correct-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+@keyframes correct-glow {
+  0% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.3), 0 0 20px rgba(34, 197, 94, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.8), 0 0 40px rgba(34, 197, 94, 0.6); }
+  100% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.3), 0 0 20px rgba(34, 197, 94, 0.2); }
+}
+
+@keyframes correct-bounce {
+  0%, 20%, 53%, 80%, 100% { transform: translate3d(0, 0, 0); }
+  40%, 43% { transform: translate3d(0, -15px, 0); }
+  70% { transform: translate3d(0, -7px, 0); }
+  90% { transform: translate3d(0, -3px, 0); }
+}
+
+@keyframes correct-scale {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Error animations (for incorrect answers) */
+@keyframes incorrect-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+  20%, 40%, 60%, 80% { transform: translateX(8px); }
+}
+
+@keyframes incorrect-flash {
+  0%, 50%, 100% { background-color: rgba(239, 68, 68, 0.1); }
+  25%, 75% { background-color: rgba(239, 68, 68, 0.3); }
+}
+
+@keyframes incorrect-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  50% { transform: scale(1.02); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+@keyframes incorrect-glow {
+  0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.3), 0 0 20px rgba(239, 68, 68, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.6); }
+  100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.3), 0 0 20px rgba(239, 68, 68, 0.2); }
+}
+
+/* Neutral animations (for general selections) */
+@keyframes neutral-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+  50% { transform: scale(1.03); box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+@keyframes neutral-glow {
+  0% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.6), 0 0 35px rgba(59, 130, 246, 0.4); }
+  100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2); }
+}
+
+/* Utility animation classes */
+.answer-effect-correct-pulse {
+  animation: correct-pulse 0.6s ease-out;
+}
+
+.answer-effect-correct-glow {
+  animation: correct-glow 1s ease-in-out;
+}
+
+.answer-effect-correct-bounce {
+  animation: correct-bounce 0.8s ease-in-out;
+}
+
+.answer-effect-correct-scale {
+  animation: correct-scale 0.4s ease-out;
+}
+
+.answer-effect-incorrect-shake {
+  animation: incorrect-shake 0.6s ease-in-out;
+}
+
+.answer-effect-incorrect-flash {
+  animation: incorrect-flash 0.6s ease-in-out;
+}
+
+.answer-effect-incorrect-pulse {
+  animation: incorrect-pulse 0.6s ease-out;
+}
+
+.answer-effect-incorrect-glow {
+  animation: incorrect-glow 1s ease-in-out;
+}
+
+.answer-effect-neutral-pulse {
+  animation: neutral-pulse 0.5s ease-out;
+}
+
+.answer-effect-neutral-glow {
+  animation: neutral-glow 0.8s ease-in-out;
+}
+
+/* Background color transitions for immediate visual feedback */
+.answer-feedback-correct {
+  background-color: rgba(34, 197, 94, 0.1) !important;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+  transition: all 0.2s ease-out;
+}
+
+.answer-feedback-incorrect {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  transition: all 0.2s ease-out;
+}
+
+.answer-feedback-neutral {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  transition: all 0.2s ease-out;
+}
+
+/* Existing animations - enhanced */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-10px); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-100px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOutLeft {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-100px); }
+}
+
+@keyframes slideOutRight {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(100px); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scaleOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.8); }
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 1; transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounceOut {
+  0% { opacity: 1; transform: scale(1); }
+  25% { transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(0.3); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.6); }
+}
+
+@keyframes flash {
+  0%, 50%, 100% { opacity: 1; }
+  25%, 75% { opacity: 0.5; }
+}
+
+/* Animation utility classes */
+.animate-fadeIn { animation: fadeIn var(--animation-duration, 300ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms) forwards; }
+.animate-fadeOut { animation: fadeOut var(--animation-duration, 300ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms) forwards; }
+.animate-slideInLeft { animation: slideInLeft var(--animation-duration, 300ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms) forwards; }
+.animate-slideInRight { animation: slideInRight var(--animation-duration, 300ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms) forwards; }
+.animate-slideOutLeft { animation: slideOutLeft var(--animation-duration, 300ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms) forwards; }
+.animate-slideOutRight { animation: slideOutRight var(--animation-duration, 300ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms) forwards; }
+.animate-scaleIn { animation: scaleIn var(--animation-duration, 300ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms) forwards; }
+.animate-scaleOut { animation: scaleOut var(--animation-duration, 300ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms) forwards; }
+.animate-bounceIn { animation: bounceIn var(--animation-duration, 600ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms) forwards; }
+.animate-bounceOut { animation: bounceOut var(--animation-duration, 600ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms) forwards; }
+.animate-pulse { animation: pulse var(--animation-duration, 2000ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms) infinite; }
+.animate-shake { animation: shake var(--animation-duration, 600ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms); }
+.animate-glow { animation: glow var(--animation-duration, 2000ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms) infinite; }
+.animate-flash { animation: flash var(--animation-duration, 1000ms) var(--animation-easing, ease-in-out) var(--animation-delay, 0ms); }
+
+/* Interactive effects */
+.effect-pulse-visible { animation: pulse 2s ease-in-out infinite; }
+.effect-scale-hover:hover { transform: scale(1.05); transition: transform 0.2s ease-out; }
+.effect-bounce-click { animation: bounceIn 0.6s ease-in-out; }
+
+/* Preview mode styling */
+.animation-preview {
+  position: relative;
+  z-index: 1000;
+}

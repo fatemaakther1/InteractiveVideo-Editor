@@ -7,6 +7,7 @@ export interface ElementListProps {
   selectedElement: InteractiveElement | null;
   onSelectElement: (element: InteractiveElement) => void;
   onDeleteElement: (elementId: string) => void;
+  onSeek?: (time: number) => void;
 }
 
 const ElementList: React.FC<ElementListProps> = ({
@@ -14,6 +15,7 @@ const ElementList: React.FC<ElementListProps> = ({
   selectedElement,
   onSelectElement,
   onDeleteElement,
+  onSeek,
 }) => {
   if (elements.length === 0) {
     return (
@@ -40,6 +42,7 @@ const ElementList: React.FC<ElementListProps> = ({
           isSelected={selectedElement?.id === element.id}
           onSelect={() => onSelectElement(element)}
           onDelete={() => onDeleteElement(element.id)}
+          onSeek={onSeek}
         />
       ))}
     </div>

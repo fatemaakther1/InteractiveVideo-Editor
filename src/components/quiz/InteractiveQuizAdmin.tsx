@@ -40,16 +40,8 @@ const InteractiveQuizAdmin: React.FC<InteractiveQuizAdminProps> = ({
     updateQuiz(updated);
   }, [localQuiz, updateQuiz]);
 
-  const handleOverallEndTimeChange = useCallback((time: number) => {
-    const updated = { ...localQuiz, overallEndTime: time };
-    updateQuiz(updated);
-  }, [localQuiz, updateQuiz]);
 
   const createNewQuestion = useCallback((): QuizQuestionType => {
-    const questionStart = localQuiz.questions.length > 0 
-      ? Math.max(...localQuiz.questions.map(q => q.endTime)) + 1 
-      : localQuiz.overallStartTime;
-    
     const defaultOptions: QuizOption[] = [
       { id: generateId(), text: '', isCorrect: false },
       { id: generateId(), text: '', isCorrect: false }
@@ -59,11 +51,9 @@ const InteractiveQuizAdmin: React.FC<InteractiveQuizAdminProps> = ({
       id: generateId(),
       questionText: '',
       type: 'mcq',
-      options: defaultOptions,
-      startTime: questionStart,
-      endTime: questionStart + 5
+      options: defaultOptions
     };
-  }, [localQuiz]);
+  }, []);
 
   const handleAddQuestion = useCallback(() => {
     const newQuestion = createNewQuestion();
@@ -108,40 +98,25 @@ const InteractiveQuizAdmin: React.FC<InteractiveQuizAdminProps> = ({
         </div>
 
         {/* Overall Timing */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Quiz Start Time (seconds)
-            </label>
-            <input
-              type="number"
-              value={localQuiz.overallStartTime}
-              onChange={(e) => handleOverallStartTimeChange(Number(e.target.value))}
-              min="0"
-              step="0.1"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Quiz End Time (seconds)
-            </label>
-            <input
-              type="number"
-              value={localQuiz.overallEndTime}
-              onChange={(e) => handleOverallEndTimeChange(Number(e.target.value))}
-              min={localQuiz.overallStartTime}
-              step="0.1"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Quiz Start Time (seconds)
+          </label>
+          <input
+            type="number"
+            value={localQuiz.overallStartTime}
+            onChange={(e) => handleOverallStartTimeChange(Number(e.target.value))}
+            min="0"
+            step="0.1"
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+          />
         </div>
 
         {/* Quiz Description */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
           <p className="text-sm text-yellow-800">
-            <strong>How it works:</strong> During the quiz period ({localQuiz.overallStartTime}s - {localQuiz.overallEndTime}s), 
-            the video will be completely locked. Users must answer all questions to continue watching.
+            <strong>How it works:</strong> At {localQuiz.overallStartTime}s, the video will pause and the quiz will appear. 
+            Users must answer all questions to continue watching the video.
           </p>
         </div>
 
@@ -190,7 +165,7 @@ const InteractiveQuizAdmin: React.FC<InteractiveQuizAdminProps> = ({
           <h4 className="font-semibold text-gray-800 mb-2">Quiz Summary</h4>
           <ul className="text-sm text-gray-600 space-y-1">
             <li>Total Questions: {localQuiz.questions.length}</li>
-            <li>Quiz Duration: {localQuiz.overallEndTime - localQuiz.overallStartTime} seconds</li>
+            <li>Start Time: {localQuiz.overallStartTime} seconds</li>
             <li>MCQ Questions: {localQuiz.questions.filter(q => q.type === 'mcq').length}</li>
             <li>True/False Questions: {localQuiz.questions.filter(q => q.type === 'true-false').length}</li>
           </ul>

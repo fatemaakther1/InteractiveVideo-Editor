@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   MediaPlayer,
   MediaProvider,
@@ -18,9 +18,10 @@ import type {
   QuizResult,
 } from "../types";
 import { VIDEO_CONFIG, UI_CONSTANTS } from "../constants";
-import { elementUtils } from "../utils";
+import { elementUtils, getElementAnimationConfig, addBounceClickHandler, ensureElementAnimations } from "../utils";
 import QuizManager from "./QuizManager";
-import QuizOverlay from "./quiz/QuizOverlay";
+import { QuizOverlay } from "./QuizOverlay";
+import { createAnswerFeedbackHandler } from "../utils/animationUtils";
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
 
@@ -39,60 +40,11 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
     currentQuizId: undefined,
     isPaused: false,
   });
-  
-  // Interactive quiz state
-  const [activeQuiz, setActiveQuiz] = useState<InteractiveQuiz | null>(null);
-  const [isQuizLocked, setIsQuizLocked] = useState(false);
-  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
-  const [showQuizResult, setShowQuizResult] = useState(false);
 
   // Reference to the video player - allows us to control the video
   const playerRef = useRef<MediaPlayerInstance>(null);
-  
-  // Check for active interactive quizzes
-  useEffect(() => {
-    const quizElements = elements.filter(el => el.type === 'interactive-quiz' && el.quiz);
-    
-    for (const element of quizElements) {
-      const quiz = element.quiz;
-      if (!quiz) continue;
-      
-      // Check if we should start the quiz
-      if (currentTime >= quiz.overallStartTime && currentTime <= quiz.overallEndTime && !activeQuiz && !isQuizLocked) {
-        setActiveQuiz(quiz);
-        setIsQuizLocked(true);
-        handlePauseVideo();
-        break;
-      }
-    }
-  }, [currentTime, elements, activeQuiz, isQuizLocked]);
-  
-  // Handle quiz completion
-  const handleQuizComplete = (result: QuizResult) => {
-    setQuizResult(result);
-    setShowQuizResult(true);
-  };
-  
-  // Handle continuing after quiz results
-  const handleContinueAfterQuiz = () => {
-    setActiveQuiz(null);
-    setIsQuizLocked(false);
-    setQuizResult(null);
-    setShowQuizResult(false);
-    handleResumeVideo();
-  };
-  
-  // Close quiz overlay
-  const handleCloseQuiz = () => {
-    if (quizResult) {
-      handleContinueAfterQuiz();
-    } else {
-      // If closing without completing quiz, still unlock
-      setActiveQuiz(null);
-      setIsQuizLocked(false);
-      handleResumeVideo();
-    }
-  };
+  // Reference to QuizManager to call its methods
+  const quizManagerRef = useRef<any>(null);
 
   // Function to handle clicks on different types of interactive elements
   // This is called when user clicks on buttons, images, etc.
@@ -145,18 +97,29 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
     setQuizState(newQuizState);
   };
 
+  // Store reference to the QuizManager's completion handler
+  const quizCompleteHandler = useRef<((quizId: string) => void) | null>(null);
+
   const handleQuizAnswer = (elementId: string, answer: string) => {
     // Save the answer
     setSelectedAnswer(prev => ({ ...prev, [elementId]: answer }));
     
-    // Complete the quiz and resume video
-    setQuizState({
-      isActive: false,
-      currentQuizId: undefined,
-      isPaused: false,
-    });
+    console.log(`🎉 Quiz ${elementId} completed with answer: ${answer}`);
     
-    handleResumeVideo();
+    // Call QuizManager's completion handler if it exists
+    if (quizCompleteHandler.current) {
+      quizCompleteHandler.current(elementId);
+    } else {
+      // Fallback: manual state management (shouldn't happen with our improved setup)
+      setQuizState({
+        isActive: false,
+        currentQuizId: undefined,
+        isPaused: false,
+      });
+      handleResumeVideo();
+    }
+    
+    console.log(`🎉 Quiz ${elementId} completed`);
   };
 
   // Function to get elements that should be visible at current time
@@ -172,19 +135,26 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
     const isCorrect = selectedAnswer[element.id] === element.correctAnswer;
     // Check if we should show the result
     const showResult = showResults[element.id];
+    
+    // Ensure element has animation properties
+    const elementWithAnimation = ensureElementAnimations(element);
+    const animationConfig = getElementAnimationConfig(elementWithAnimation, 'entrance');
 
-    // Simple positioning - just use the x,y coordinates from the element
-    const elementStyle = {
+    // Element positioning and sizing - use all configured properties
+    const elementStyle: React.CSSProperties = {
       left: `${element.x}px`, // Horizontal position
       top: `${element.y}px`, // Vertical position
+      width: element.width ? `${element.width}px` : undefined, // Use configured width if available
+      height: element.height ? `${element.height}px` : undefined, // Use configured height if available
+      ...animationConfig.style, // Add animation CSS variables
     };
 
     if (element.type === "interactive-question") {
       return (
         <div
           key={element.id}
-          className="absolute bg-white/95 backdrop-blur-md rounded-2xl shadow-large border border-primary-200/50 p-6 min-w-80 max-w-md animate-scale-in"
-          style={elementStyle}
+          className={`absolute bg-white/95 backdrop-blur-md rounded-2xl shadow-large border border-primary-200/50 p-6 min-w-80 max-w-md ${animationConfig.className}`}
+          style={{ ...elementStyle, pointerEvents: 'auto' }}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="space-y-4">
@@ -200,20 +170,23 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
               <div className="space-y-3">
                 {element.questionType === "multiple-choice" && element.options && (
                   <div className="space-y-2">
-                    {element.options.map((option, index) => (
-                      <button
-                        key={index}
-                        className="w-full text-left p-3 rounded-xl border-2 border-secondary-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-200 group"
-                        onClick={() => handleQuestionAnswer(element, option)}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-5 h-5 rounded-full border-2 border-secondary-300 group-hover:border-primary-500 flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-primary-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    {element.options.map((option, index) => {
+                      const answerFeedbackHandler = createAnswerFeedbackHandler(handleQuestionAnswer, element);
+                      return (
+                        <button
+                          key={index}
+                          className="w-full text-left p-3 rounded-xl border-2 border-secondary-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-200 group"
+                          onClick={(e) => answerFeedbackHandler(e, option)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-5 h-5 rounded-full border-2 border-secondary-300 group-hover:border-primary-500 flex items-center justify-center">
+                              <div className="w-2 h-2 rounded-full bg-primary-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            </div>
+                            <span className="text-secondary-800 group-hover:text-primary-800 font-medium">{option}</span>
                           </div>
-                          <span className="text-secondary-800 group-hover:text-primary-800 font-medium">{option}</span>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -221,14 +194,20 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       className="p-4 rounded-xl bg-emerald-50 border-2 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100 text-emerald-800 font-bold transition-all duration-200 transform hover:scale-105"
-                      onClick={() => handleQuestionAnswer(element, "True")}
+                      onClick={(e) => {
+                        const answerFeedbackHandler = createAnswerFeedbackHandler(handleQuestionAnswer, element);
+                        answerFeedbackHandler(e, "True");
+                      }}
                     >
                       <i className="fas fa-check mr-2"></i>
                       True
                     </button>
                     <button
                       className="p-4 rounded-xl bg-red-50 border-2 border-red-200 hover:border-red-400 hover:bg-red-100 text-red-800 font-bold transition-all duration-200 transform hover:scale-105"
-                      onClick={() => handleQuestionAnswer(element, "False")}
+                      onClick={(e) => {
+                        const answerFeedbackHandler = createAnswerFeedbackHandler(handleQuestionAnswer, element);
+                        answerFeedbackHandler(e, "False");
+                      }}
                     >
                       <i className="fas fa-times mr-2"></i>
                       False
@@ -292,6 +271,8 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
         position: 'absolute',
         left: `${element.x}px`,
         top: `${element.y}px`,
+        width: element.width ? `${element.width}px` : '120px',
+        height: element.height ? `${element.height}px` : '50px',
         padding: '14px',
         borderRadius: '12px',
         fontSize: '14px',
@@ -305,9 +286,9 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
         textAlign: 'center',
         wordBreak: 'break-word',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        minWidth: '90px',
         color: 'white',
         backdropFilter: 'blur(8px)',
+        ...animationConfig.style, // Add animation CSS variables
       };
 
       // Type-specific styling with blue theme variations
@@ -351,16 +332,17 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
     return (
       <div
         key={element.id}
-        style={getElementStyle()}
-        onClick={() => handleElementClick(element)}
+        className={animationConfig.className}
+        style={{ ...getElementStyle(), pointerEvents: 'auto' }}
+        onClick={addBounceClickHandler(handleElementClick, elementWithAnimation)}
       >
         {element.type === 'image' && element.url ? (
           <img
             src={element.url}
             alt={element.content}
             style={{
-              maxWidth: '200px',
-              maxHeight: '150px',
+              width: '100%',
+              height: '100%',
               objectFit: 'contain',
             }}
             draggable={false}
@@ -396,12 +378,24 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
         </MediaPlayer>
 
         {/* Layer that sits on top of the video to show interactive elements */}
-        <div className="interactive-overlay">
+        <div 
+          className="interactive-overlay"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none', // Allow clicks to pass through to video controls
+            zIndex: 10
+          }}
+        >
           {/* Show all elements that should be visible at current time, but hide questions if quiz pause is active */}
           {getVisibleElements()
             .filter(element => {
-              // Hide questions when quiz pause is active - they'll be shown in the overlay instead
-              if (enableQuizPause && element.type === 'interactive-question' && quizState.isActive) {
+              // Hide quiz elements when quiz pause is active - they'll be shown in the overlay instead
+              if (enableQuizPause && quizState.isActive && 
+                  (element.type === 'interactive-question' || element.type === 'interactive-quiz')) {
                 return false;
               }
               return true;
@@ -419,16 +413,18 @@ const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
           onPauseVideo={handlePauseVideo}
           onResumeVideo={handleResumeVideo}
           onQuizStateChange={handleQuizStateChange}
+          onExposeComplete={(completeFn) => {
+            quizCompleteHandler.current = completeFn;
+          }}
         />
       )}
 
-      {/* Interactive Quiz Overlay - shows when interactive quiz is active */}
-      {activeQuiz && (
+      {/* Quiz Overlay - shows when quiz pause is active */}
+      {enableQuizPause && quizState.isActive && (
         <QuizOverlay
-          quiz={activeQuiz}
-          currentTime={currentTime}
-          onQuizComplete={handleQuizComplete}
-          onClose={handleCloseQuiz}
+          quizState={quizState}
+          elements={elements}
+          onQuizAnswer={handleQuizAnswer}
         />
       )}
     </div>

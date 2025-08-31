@@ -25,7 +25,7 @@ import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
 
 const VideoPlayerAdmin = forwardRef<VideoPlayerRef, VideoPlayerAdminProps>(
-  ({ elements, onAddElement }, ref) => {
+  ({ elements, onAddElement, onTimeUpdate }, ref) => {
     const [currentTime, setCurrentTime] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [duration, setDuration] = useState(0);
@@ -35,6 +35,12 @@ const VideoPlayerAdmin = forwardRef<VideoPlayerRef, VideoPlayerAdminProps>(
     useImperativeHandle(ref, () => ({
       get currentTime() {
         return currentTime;
+      },
+      seek: (time: number) => {
+        const player = playerRef.current;
+        if (player) {
+          player.currentTime = time;
+        }
       },
     }));
 
@@ -102,8 +108,11 @@ const VideoPlayerAdmin = forwardRef<VideoPlayerRef, VideoPlayerAdminProps>(
           playsInline
           autoplay={false}
           controls
-          onTimeUpdate={({ currentTime }) => setCurrentTime(currentTime)}
-          onDurationChange={({ duration }) => setDuration(duration)}
+          onTimeUpdate={({ currentTime }) => {
+            setCurrentTime(currentTime);
+            onTimeUpdate?.(currentTime);
+          }}
+          onDurationChange={(event) => setDuration(event.duration)}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
           onLoadedData={() => setIsLoaded(true)}

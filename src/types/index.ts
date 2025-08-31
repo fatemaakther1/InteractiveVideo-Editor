@@ -1,17 +1,51 @@
-// Core Types
+// Animation Types
+export type AnimationType = 
+  | 'none'
+  | 'fadeIn' | 'fadeOut'
+  | 'slideInLeft' | 'slideInRight' | 'slideOutLeft' | 'slideOutRight'
+  | 'scaleIn' | 'scaleOut'
+  | 'bounceIn' | 'bounceOut'
+  | 'pulse' | 'shake' | 'glow' | 'flash'
+  | 'zoomIn' | 'zoomOut'
+  | 'flipIn' | 'flipOut'
+  | 'rotateIn' | 'rotateOut';
+
+export type EasingType = 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'linear';
+
+// Interactive Effect Types for Answer Selection
+export interface AnswerEffects {
+  correct?: AnimationType; // Effect for correct answers
+  incorrect?: AnimationType; // Effect for incorrect answers  
+  neutral?: AnimationType; // Effect for neutral selections
+}
+
+export interface InteractiveEffects {
+  pulseWhenVisible?: boolean;
+  bounceOnClick?: boolean;
+  scaleOnHover?: boolean;
+}
+
+export interface AnimationConfig {
+  entrance?: AnimationType;
+  exit?: AnimationType;
+  interactiveEffects?: InteractiveEffects;
+  answerEffects?: AnswerEffects; // New property for answer feedback
+  duration?: number;
+  delay?: number;
+  easing?: EasingType;
+}
+
+// Element Types
 export type ElementType = 
   | 'text' 
-  | 'pointer' 
-  | 'image' 
-  | 'opener' 
   | 'interactive-button' 
   | 'interactive-question'
-  | 'interactive-quiz';
+  | 'interactive-quiz' 
+  | 'image' 
+  | 'pointer' 
+  | 'opener';
 
-export type QuestionType = 
-  | 'multiple-choice' 
-  | 'text-input' 
-  | 'true-false';
+export type QuestionType = 'single-choice' | 'multiple-choice' | 'true-false' | 'text-input';
 
 // Quiz System Types
 export interface QuizOption {
@@ -25,8 +59,6 @@ export interface QuizQuestion {
   questionText: string;
   type: 'mcq' | 'true-false';
   options: QuizOption[];
-  startTime: number;
-  endTime: number;
 }
 
 export interface InteractiveQuiz {
@@ -51,6 +83,7 @@ export interface QuizResult {
   score: number; // percentage
 }
 
+// Main Interactive Element Interface
 export interface InteractiveElement {
   id: string;
   type: ElementType;
@@ -61,26 +94,51 @@ export interface InteractiveElement {
   height?: number;
   timestamp: number;
   endTime: number;
-  url?: string;
-  action?: string;
+  zIndex?: number;
+  
+  // Question-specific properties
   questionType?: QuestionType;
   options?: string[];
   correctAnswer?: string;
   // Quiz-specific properties
   quiz?: InteractiveQuiz;
+  
+  // Image-specific properties
+  url?: string;
+  
+  // Button-specific properties
+  action?: string;
+  
+  // Text styling properties
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  fontSize?: number;
+  color?: string;
+  
+  // Animation configuration
+  animation?: AnimationConfig;
 }
 
-export interface ElementTypeConfig {
-  type: ElementType;
-  label: string;
-  icon: string;
+// State interfaces for VideoPlayer
+export interface AnswerState {
+  [elementId: string]: string;
 }
 
+export interface ResultsState {
+  [elementId: string]: boolean;
+}
+
+// Project data structure
 export interface ProjectData {
   elements: InteractiveElement[];
-  timestamp: string;
+  version?: string;
 }
 
+// Component props interfaces
+export interface VideoPlayerPreviewProps {
+  elements: InteractiveElement[];
+}
 // Component Props
 export interface VideoPlayerRef {
   currentTime: number;
@@ -92,20 +150,50 @@ export interface VideoPlayerAdminProps {
   onTimeUpdate?: (time: number) => void;
 }
 
-// UI State Types
-export type TabType = 'element-list' | 'contents';
-
-export interface Position {
-  x: number;
-  y: number;
+// Answer feedback specific types
+export interface AnswerFeedbackConfig {
+  showImmediate: boolean; // Show feedback immediately on selection
+  duration: number; // How long to show the effect
+  correctEffect: AnimationType;
+  incorrectEffect: AnimationType;
+  neutralEffect?: AnimationType;
 }
 
-export interface AnswerState {
-  [key: string]: string;
+// Enhanced question element with answer effects
+export interface QuestionElementWithEffects extends InteractiveElement {
+  answerFeedback?: AnswerFeedbackConfig;
 }
 
-export interface ResultsState {
-  [key: string]: boolean;
+// Video Player related types
+export interface VideoPlayerRef {
+  seekTo: (time: number) => void;
+  getCurrentTime: () => number;
+  play: () => void;
+  pause: () => void;
+}
+
+export interface VideoPlayerAdminProps {
+  elements: InteractiveElement[];
+  onAddElement: (element: Omit<InteractiveElement, 'id'>) => void;
+  onTimeUpdate: (time: number) => void;
+}
+
+// Quiz Pause Types
+export interface QuizState {
+  isActive: boolean;
+  currentQuizId?: string;
+  isPaused: boolean;
+}
+
+export interface QuizTimestamp {
+  elementId: string;
+  timestamp: number;
+  element: InteractiveElement;
+}
+
+export interface VideoPlayerPreviewProps {
+  elements: InteractiveElement[];
+  enableQuizPause?: boolean;
 }
 
 // Quiz Pause Types

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { InteractiveElement, QuizState } from '../types';
+import { useState, useCallback } from 'react';
+import type { InteractiveElement, QuizState, QuizResponse, QuizResult } from '../types';
 
 interface QuizOverlayProps {
   quizState: QuizState;
@@ -12,9 +12,10 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({
   elements,
   onQuizAnswer,
 }) => {
-  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
+  const [responses, setResponses] = useState<Record<string, string>>({});
   const [showResult, setShowResult] = useState<boolean>(false);
-  const [isCorrect, setIsCorrect] = useState<boolean>(false);
+  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
 
   // Get the current quiz element
   const currentQuizElement = elements.find(
@@ -25,140 +26,271 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({
     return null;
   }
 
-  const handleAnswerSubmit = (answer: string) => {
-    setSelectedAnswer(answer);
-    const correct = answer === currentQuizElement.correctAnswer;
-    setIsCorrect(correct);
-    setShowResult(true);
+  // Check if this is an interactive-quiz (complex) or interactive-question (simple)
+  const isComplexQuiz = currentQuizElement.type === 'interactive-quiz' && currentQuizElement.quiz;
+  
+  if (!isComplexQuiz) {
+    // Handle simple interactive-question (fallback to original logic)
+    return renderSimpleQuestion();
+  }
 
-    // Auto-hide result and resume video after 3 seconds
-    setTimeout(() => {
-      setShowResult(false);
-      setSelectedAnswer('');
-      onQuizAnswer(currentQuizElement.id, answer);
-    }, 3000);
-  };
+  const quiz = currentQuizElement.quiz!;
+  const currentQuestion = quiz.questions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === quiz.questions.length - 1;
+  const hasAnsweredCurrent = responses[currentQuestion?.id] !== undefined;
 
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      const target = e.target as HTMLInputElement;
-      handleAnswerSubmit(target.value);
+  function renderSimpleQuestion() {
+    // Fallback for simple interactive-question elements
+    return (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full mx-4 transform animate-scale-in">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {currentQuizElement.content}
+            </h2>
+            <p className="text-gray-600">Simple question not implemented yet</p>
+            <button 
+              onClick={() => onQuizAnswer(currentQuizElement.id, 'skip')}
+              className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg"
+            >
+              Skip
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle answer selection for complex quiz
+  const handleAnswerSelect = useCallback((optionId: string) => {
+    if (!currentQuestion) return;
+    
+    setResponses(prev => ({
+      ...prev,
+      [currentQuestion.id]: optionId
+    }));
+  }, [currentQuestion]);
+
+  // Calculate quiz results
+  const calculateResult = useCallback((): QuizResult => {
+    const quizResponses: QuizResponse[] = quiz.questions.map(question => {
+      const selectedOptionId = responses[question.id] || '';
+      const selectedOption = question.options.find(opt => opt.id === selectedOptionId);
+      const isCorrect = selectedOption?.isCorrect || false;
+
+      return {
+        questionId: question.id,
+        selectedOptionId,
+        isCorrect
+      };
+    });
+
+    const correctAnswers = quizResponses.filter(r => r.isCorrect).length;
+    const score = Math.round((correctAnswers / quiz.questions.length) * 100);
+
+    return {
+      quizId: quiz.id,
+      responses: quizResponses,
+      totalQuestions: quiz.questions.length,
+      correctAnswers,
+      score
+    };
+  }, [quiz, responses]);
+
+  // Handle next question or submit quiz
+  const handleNextQuestion = useCallback(() => {
+    if (!hasAnsweredCurrent) return;
+
+    if (isLastQuestion) {
+      // Submit quiz and show results
+      const result = calculateResult();
+      setQuizResult(result);
+      setShowResult(true);
+    } else {
+      // Go to next question
+      setCurrentQuestionIndex(prev => prev + 1);
     }
-  };
+  }, [hasAnsweredCurrent, isLastQuestion, calculateResult]);
+
+  // Handle continue video after quiz completion
+  const handleContinueVideo = useCallback(() => {
+    onQuizAnswer(currentQuizElement.id, 'completed');
+  }, [currentQuizElement.id, onQuizAnswer]);
+
+  // Show results screen
+  if (showResult && quizResult) {
+    return (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full mx-4 transform">
+          <div className="text-center space-y-6">
+            <h2 className="text-3xl font-bold text-gray-900">Quiz Complete!</h2>
+            
+            {/* Score Display */}
+            <div className="bg-blue-50 rounded-2xl p-6">
+              <div className="text-4xl font-bold text-blue-600 mb-2">{quizResult.score}%</div>
+              <div className="text-gray-700">
+                You got <span className="font-bold text-green-600">{quizResult.correctAnswers}</span> out of{' '}
+                <span className="font-bold">{quizResult.totalQuestions}</span> questions correct!
+              </div>
+            </div>
+
+            {/* Continue Button */}
+            <button
+              onClick={handleContinueVideo}
+              className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
+            >
+              <i className="fas fa-play mr-2"></i>
+              Continue Video
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show quiz questions
+  if (!currentQuestion) {
+    return null;
+  }
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full mx-4 transform animate-scale-in">
-        {/* Pause indicator */}
-        <div className="flex items-center justify-center mb-6">
-          <div className="flex items-center space-x-3 px-4 py-2 bg-blue-100 rounded-full">
-            <i className="fas fa-pause text-blue-600"></i>
-            <span className="text-blue-800 font-semibold">Video Paused for Quiz</span>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50">
+      <div className="flex h-full">
+        {/* Left Panel - Progress */}
+        <div className="w-1/4 bg-gradient-to-br from-blue-600 to-blue-800 p-6 flex flex-col justify-center">
+          <div className="text-white">
+            <h2 className="text-2xl font-bold mb-4">{quiz.title}</h2>
+            <div className="mb-6">
+              <div className="text-blue-200 text-sm mb-2">Progress</div>
+              <div className="text-xl font-bold">{currentQuestionIndex + 1} / {quiz.questions.length}</div>
+            </div>
+            <div className="space-y-3">
+              {quiz.questions.map((_, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    index < currentQuestionIndex
+                      ? 'bg-green-500 text-white'
+                      : index === currentQuestionIndex
+                      ? 'bg-white text-blue-800'
+                      : 'bg-blue-400/50 text-blue-200'
+                  }`}>
+                    {index + 1}
+                  </div>
+                  <span className={`text-sm ${
+                    index <= currentQuestionIndex ? 'text-white' : 'text-blue-200'
+                  }`}>
+                    Question {index + 1}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {!showResult ? (
-          <div className="space-y-6">
-            {/* Question header */}
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {currentQuizElement.content}
-              </h2>
-              <p className="text-gray-600">
-                Please select your answer to continue watching
-              </p>
+        {/* Main Content Area */}
+        <div className="flex-1 bg-white flex flex-col">
+          {/* Header */}
+          <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-gray-600">Question {currentQuestionIndex + 1} / {quiz.questions.length}</div>
+              <div className="flex items-center space-x-2 px-3 py-1 bg-blue-100 rounded-full">
+                <i className="fas fa-pause text-blue-600 text-sm"></i>
+                <span className="text-blue-800 font-semibold text-sm">Video Paused</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Question Content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-gray-800 mb-6">
+                {currentQuestion.questionText}
+              </h3>
             </div>
 
-            {/* Answer options based on question type */}
-            {currentQuizElement.questionType === 'multiple-choice' && currentQuizElement.options && (
-              <div className="space-y-3">
-                {currentQuizElement.options.map((option, index) => (
+            {/* Answer Options */}
+            <div className="grid gap-3 max-w-3xl">
+              {currentQuestion.options.map((option, index) => {
+                const isSelected = responses[currentQuestion.id] === option.id;
+                const optionLetter = String.fromCharCode(65 + index); // A, B, C, D...
+                
+                return (
                   <button
-                    key={index}
-                    className="w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 group"
-                    onClick={() => handleAnswerSubmit(option)}
+                    key={option.id}
+                    onClick={() => handleAnswerSelect(option.id)}
+                    className={`p-4 text-left border-2 rounded-xl transition-all duration-200 hover:shadow-md ${
+                      isSelected
+                        ? 'border-blue-500 bg-blue-50 text-blue-900 shadow-md'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50'
+                    }`}
                   >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-6 h-6 rounded-full border-2 border-gray-300 group-hover:border-blue-500 flex items-center justify-center">
-                        <div className="w-3 h-3 rounded-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                      </div>
-                      <span className="text-gray-800 group-hover:text-blue-800 font-medium text-lg">
-                        {option}
+                    <div className="flex items-center gap-4">
+                      <span className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                        isSelected
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {optionLetter}
                       </span>
+                      <span className="flex-1 font-medium text-lg leading-relaxed">{option.text}</span>
                     </div>
                   </button>
-                ))}
-              </div>
-            )}
+                );
+              })}
+            </div>
 
-            {currentQuizElement.questionType === 'true-false' && (
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  className="p-6 rounded-xl bg-green-50 border-2 border-green-200 hover:border-green-400 hover:bg-green-100 text-green-800 font-bold text-xl transition-all duration-200 transform hover:scale-105"
-                  onClick={() => handleAnswerSubmit('True')}
-                >
-                  <i className="fas fa-check mr-3 text-2xl"></i>
-                  True
-                </button>
-                <button
-                  className="p-6 rounded-xl bg-red-50 border-2 border-red-200 hover:border-red-400 hover:bg-red-100 text-red-800 font-bold text-xl transition-all duration-200 transform hover:scale-105"
-                  onClick={() => handleAnswerSubmit('False')}
-                >
-                  <i className="fas fa-times mr-3 text-2xl"></i>
-                  False
-                </button>
-              </div>
-            )}
-
-            {currentQuizElement.questionType === 'text-input' && (
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Type your answer here..."
-                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-800 placeholder-gray-500 text-lg"
-                  onKeyDown={handleInputKeyDown}
-                  autoFocus
-                />
-                <button
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg text-lg"
-                  onClick={(e) => {
-                    const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                    handleAnswerSubmit(input.value);
-                  }}
-                >
-                  <i className="fas fa-paper-plane mr-2"></i>
-                  Submit Answer
-                </button>
+            {/* Answer requirement notice */}
+            {!hasAnsweredCurrent && (
+              <div className="mt-6 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
+                <p className="text-amber-800 font-medium flex items-center">
+                  <span className="text-xl mr-2">⚠️</span>
+                  Please select an answer to continue.
+                </p>
               </div>
             )}
           </div>
-        ) : (
-          /* Results display */
-          <div className="text-center space-y-6">
-            <div className={`p-6 rounded-2xl border-2 ${
-              isCorrect 
-                ? 'bg-green-50 border-green-200 text-green-800' 
-                : 'bg-red-50 border-red-200 text-red-800'
-            }`}>
-              <div className="flex items-center justify-center space-x-3 mb-4">
-                <i className={`fas ${isCorrect ? 'fa-check-circle' : 'fa-times-circle'} text-4xl`}></i>
-                <span className="font-bold text-3xl">
-                  {isCorrect ? 'Correct!' : 'Incorrect'}
-                </span>
+
+          {/* Footer */}
+          <div className="p-6 border-t border-gray-200 bg-gray-50">
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-gray-600 font-medium">
+                {currentQuestionIndex + 1} of {quiz.questions.length} questions
               </div>
-              <div className="space-y-2 text-lg">
-                <p><span className="font-semibold">Correct answer:</span> {currentQuizElement.correctAnswer}</p>
-                <p><span className="font-semibold">Your answer:</span> {selectedAnswer}</p>
-              </div>
-            </div>
-            <p className="text-gray-600 text-lg">
-              Video will resume automatically in a moment...
-            </p>
-            <div className="flex justify-center">
-              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+
+              <button
+                onClick={handleNextQuestion}
+                disabled={!hasAnsweredCurrent}
+                className={`px-8 py-3 font-bold rounded-lg transition-all ${
+                  hasAnsweredCurrent
+                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {isLastQuestion ? 'Submit Quiz' : 'Next Question'} →
+              </button>
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Right Panel */}
+        <div className="w-1/4 bg-gradient-to-br from-gray-50 to-gray-100 p-6 flex flex-col justify-center">
+          <div className="text-center">
+            <div className="mb-6">
+              <div className="text-4xl mb-4">📝</div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Quiz in Progress</h3>
+              <p className="text-sm text-gray-600">Answer all questions to continue watching the video.</p>
+            </div>
+            
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-4">
+              <div className="text-2xl font-bold text-blue-600 mb-1">{quiz.questions.length - currentQuestionIndex}</div>
+              <div className="text-sm text-gray-600">questions remaining</div>
+            </div>
+
+            <div className="text-xs text-gray-500">
+              Video will resume after completing the quiz
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

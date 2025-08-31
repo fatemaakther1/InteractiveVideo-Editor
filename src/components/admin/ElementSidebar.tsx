@@ -11,6 +11,7 @@ export interface ElementSidebarProps {
   onAddElement: () => void;
   onSelectElement: (element: InteractiveElement) => void;
   onDeleteElement: (elementId: string) => void;
+  onSeek?: (time: number) => void;
 }
 
 const ElementSidebar: React.FC<ElementSidebarProps> = ({
@@ -21,6 +22,7 @@ const ElementSidebar: React.FC<ElementSidebarProps> = ({
   onAddElement,
   onSelectElement,
   onDeleteElement,
+  onSeek,
 }) => {
   const filteredElements = elements.filter(element =>
     element.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,6 +69,7 @@ const ElementSidebar: React.FC<ElementSidebarProps> = ({
         selectedElement={selectedElement}
         onSelectElement={onSelectElement}
         onDeleteElement={onDeleteElement}
+        onSeek={onSeek}
       />
     </>
   );
@@ -87,7 +90,7 @@ const ElementSidebar: React.FC<ElementSidebarProps> = ({
   ];
 
   return (
-    <aside className="w-72 bg-white/95 backdrop-blur-sm border-r border-secondary-200 flex flex-col shadow-soft">
+    <aside className="w-96 bg-white/95 backdrop-blur-sm border-r border-secondary-200 flex flex-col shadow-soft">
       <div className="p-4 border-b border-secondary-200">
         <TabContainer
           tabs={tabs}

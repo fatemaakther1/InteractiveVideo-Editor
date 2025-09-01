@@ -25,10 +25,14 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
     onSelect(element);
   };
 
-  const handleDrag = (_e: any, data: any) => {
-    // Don't update the actual element position during dragging
-    // react-rnd will handle the visual positioning
-  };
+const handleDrag = (_e: any, data: any) => {
+  onUpdate({
+    ...element,
+    x: data.x,
+    y: data.y,
+  });
+};
+
 
   const handleDragStop = (_e: any, data: any) => {
     setIsDragging(false);

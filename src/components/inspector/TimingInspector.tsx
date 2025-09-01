@@ -86,6 +86,58 @@ const TimingInspector: React.FC<TimingInspectorProps> = ({
         </div>
       </div>
 
+      {/* Image Settings - Show only for image elements */}
+      {element.type === 'image' && (
+        <div className=" rounded-2xl p-4 border border-emerald-200 shadow-soft">
+          <div className="flex items-center space-x-3 mb-4">
+              <i className="fas fa-link mr-2 text-primary-600" />
+            <div>
+              <h3 className="font-bold text-secondary-900 text-sm">Image URL</h3>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div>
+              
+              <div className="relative">
+                <input
+                  type="url"
+                  value={element.url || ''}
+                  onChange={(e) => onUpdate({ ...element, url: e.target.value })}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full px-3 py-2.5 pr-10 border-2 border-secondary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 text-sm"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <i className="fas fa-link text-secondary-400" />
+                </div>
+              </div>
+              {element.url && (
+                <div className="mt-2 flex items-center justify-between text-xs">
+                  <span className="text-emerald-600 flex items-center">
+                    <i className="fas fa-check-circle mr-1" />
+                    Image URL provided
+                  </span>
+                  <button
+                    onClick={() => onUpdate({ ...element, url: '' })}
+                    className="text-red-500 hover:text-red-700 flex items-center transition-colors"
+                  >
+                    <i className="fas fa-times mr-1" />
+                    Clear
+                  </button>
+                </div>
+              )}
+              {!element.url && (
+                <p className="mt-2 text-xs text-secondary-500">
+                  Add an image URL to display instead of the + icon
+                </p>
+              )}
+            </div>
+            
+             
+          </div>
+        </div>
+      )}
+
       {/* General Settings */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-secondary-200 shadow-soft">
         <h3 className="text-sm font-bold text-secondary-800 mb-4 flex items-center">

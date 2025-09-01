@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Rnd } from "react-rnd";
 import type { InteractiveElement } from "../../types";
-import MCQPreview from "../admin/MCQPreview";
+import '../../styles/drag-drop.css';
 
 interface ResizableDraggableElementProps {
   element: InteractiveElement;
@@ -25,8 +25,18 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
     onSelect(element);
   };
 
-  const handleDragStop = (e: any, data: any) => {
+const handleDrag = (_e: any, data: any) => {
+  onUpdate({
+    ...element,
+    x: data.x,
+    y: data.y,
+  });
+};
+
+
+  const handleDragStop = (_e: any, data: any) => {
     setIsDragging(false);
+    // Final update when drag ends
     onUpdate({
       ...element,
       x: data.x,
@@ -35,10 +45,10 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
   };
 
   const handleResizeStop = (
-    e: any,
-    direction: any,
+    _e: any,
+    _direction: any,
     ref: any,
-    delta: any,
+    _delta: any,
     position: any
   ) => {
     setIsResizing(false);
@@ -67,28 +77,61 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
       border: isSelected
         ? "3px solid #2563eb"
         : "2px dashed rgba(255, 255, 255, 0.9)",
-      background: "rgba(37, 99, 235, 0.95)", // primary-600 with opacity
-      color: "white",
       padding: "14px",
-      borderRadius: "12px",
-      fontSize: "14px",
-      fontWeight: "600",
-      boxShadow: isSelected
-        ? "0 8px 25px rgba(37, 99, 235, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)"
-        : "0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 8px rgba(0, 0, 0, 0.1)",
       cursor: isDragging || isResizing ? "grabbing" : "grab",
       userSelect: "none",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      textAlign: "center",
       wordBreak: "break-word",
       transition:
         isDragging || isResizing
           ? "none"
           : "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
       backdropFilter: "blur(8px)",
+      // Apply Advanced Format & Style settings from element properties
+      fontFamily: element.fontFamily || 'Inter',
+      fontSize: element.fontSize ? `${element.fontSize}px` : '14px',
+      fontWeight: element.bold ? 'bold' : (element.fontWeight || '600'),
+      fontStyle: element.italic ? 'italic' : 'normal',
+      textDecoration: [
+        element.underline ? 'underline' : '',
+        element.strikethrough ? 'line-through' : ''
+      ].filter(Boolean).join(' ') || 'none',
+      textTransform: element.textCase || 'none',
+      textAlign: element.textAlign || 'center',
+      color: element.color || 'white',
+      letterSpacing: element.letterSpacing ? `${element.letterSpacing}px` : 'normal',
+      lineHeight: element.lineHeight || 'normal',
+      borderRadius: element.borderRadius ? `${element.borderRadius}px` : '12px',
+      opacity: element.opacity !== undefined ? element.opacity / 100 : 1,
+      // Apply background color from element if specified
+      backgroundColor: element.backgroundColor || 'rgba(37, 99, 235, 0.95)',
+      // Default box shadow
+      boxShadow: isSelected
+        ? "0 8px 25px rgba(37, 99, 235, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)"
+        : "0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 8px rgba(0, 0, 0, 0.1)",
+      // Preserve resizability - ensure pointer events work
+      pointerEvents: 'auto',
     };
+
+    // Apply visual effects without breaking resizability
+    const filters: string[] = [];
+    if (element.blur) filters.push(`blur(${element.blur}px)`);
+    if (element.brightness !== undefined && element.brightness !== 100) {
+      filters.push(`brightness(${element.brightness}%)`);
+    }
+    if (element.grayscale) filters.push(`grayscale(${element.grayscale}%)`);
+    if (filters.length > 0) {
+      baseStyle.filter = filters.join(' ');
+    }
+    
+    // Apply custom box shadow if specified
+    if (element.boxShadow) {
+      baseStyle.boxShadow = isSelected 
+        ? `${element.boxShadow}, 0 0 0 3px rgba(37, 99, 235, 0.3)` // Maintain selection indicator
+        : element.boxShadow;
+    }
 
     // Type-specific styling with blue theme variations
     switch (element.type) {
@@ -101,24 +144,19 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
           ? "0 8px 25px rgba(14, 165, 233, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)"
           : "0 6px 20px rgba(0, 0, 0, 0.15)";
         break;
-      case "interactive-question":
-        baseStyle.background = "rgba(59, 130, 246, 0.95)"; // blue-500
-        baseStyle.border = isSelected
-          ? "3px solid #3b82f6"
-          : "2px solid rgba(59, 130, 246, 0.8)";
-        baseStyle.minWidth = "220px";
-        baseStyle.boxShadow = isSelected
-          ? "0 8px 25px rgba(59, 130, 246, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)"
-          : "0 6px 20px rgba(0, 0, 0, 0.15)";
-        break;
       case "image":
-        baseStyle.background = "rgba(16, 185, 129, 0.95)"; // emerald-500
+        // Use transparent background if image URL exists, emerald background if not
+        baseStyle.background = element.url ? "rgba(16, 185, 129, 0.1)" : "rgba(16, 185, 129, 0.95)";
         baseStyle.border = isSelected
           ? "3px solid #10b981"
           : "2px solid rgba(16, 185, 129, 0.8)";
         baseStyle.boxShadow = isSelected
           ? "0 8px 25px rgba(16, 185, 129, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)"
           : "0 6px 20px rgba(0, 0, 0, 0.15)";
+        // Reduce padding when image is present
+        if (element.url) {
+          baseStyle.padding = "4px";
+        }
         break;
       case "pointer":
         baseStyle.background = "rgba(245, 158, 11, 0.95)"; // amber-500
@@ -154,6 +192,7 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
         y: element.y,
       }}
       onDragStart={handleDragStart}
+      onDrag={handleDrag}
       onDragStop={handleDragStop}
       onResizeStart={() => setIsResizing(true)}
       onResizeStop={handleResizeStop}
@@ -176,6 +215,14 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
       }
       disableDragging={false}
       dragHandleClassName="drag-handle"
+      // Ensure resize handles work even with effects applied
+      resizeGrid={[1, 1]}
+      dragGrid={[1, 1]}
+      // Add CSS class for drag state
+      className={isDragging ? 'rnd-dragging' : 'rnd'}
+      style={{
+        zIndex: isSelected ? 1000 : element.zIndex || 1,
+      }}
       resizeHandleStyles={{
         top: {
           background: "#2563eb",
@@ -273,21 +320,14 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
         topLeft: "resize-handle-corner",
       }}
     >
-      {/* Render interactive-question elements with MCQPreview */}
-      {element.type === "interactive-question" ? (
-        <MCQPreview
-          element={element}
-          isSelected={isSelected}
-          onSelect={() => onSelect(element)}
-        />
-      ) : (
-        <div
-          className="drag-handle"
-          style={{ ...getElementStyle(), height: "100%", width: "100%" }}
-          onClick={handleClick}
-          data-element-id={element.id}
-        >
-          {element.type === "image" && element.url ? (
+      <div
+        className="drag-handle"
+        style={{ ...getElementStyle(), height: "100%", width: "100%" }}
+        onClick={handleClick}
+        data-element-id={element.id}
+      >
+        {element.type === "image" ? (
+          element.url ? (
             <img
               src={element.url}
               alt={element.content}
@@ -295,34 +335,43 @@ const ResizableDraggableElement: React.FC<ResizableDraggableElementProps> = ({
                 maxWidth: "100%",
                 maxHeight: "100%",
                 objectFit: "contain",
+                borderRadius: "8px",
               }}
               draggable={false}
             />
           ) : (
-            <div>
-              {element.content}
-              {isSelected && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "-25px",
-                    left: "0",
-                    background: "rgba(0, 0, 0, 0.8)",
-                    color: "white",
-                    padding: "2px 8px",
-                    borderRadius: "4px",
-                    fontSize: "10px",
-                    fontWeight: "400",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {element.type}
-                </div>
-              )}
+            <div className="w-full h-full flex items-center justify-center text-white/90">
+              <div className="text-center">
+                <i className="fas fa-plus text-3xl mb-2"></i>
+                <div className="text-sm font-medium">Add Image</div>
+                <div className="text-xs opacity-75">Set URL in Inspector</div>
+              </div>
             </div>
-          )}
-        </div>
-      )}
+          )
+        ) : (
+          <div>
+            {element.content}
+            {isSelected && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "-25px",
+                  left: "0",
+                  background: "rgba(0, 0, 0, 0.8)",
+                  color: "white",
+                  padding: "2px 8px",
+                  borderRadius: "4px",
+                  fontSize: "10px",
+                  fontWeight: "400",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {element.type}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </Rnd>
   );
 };

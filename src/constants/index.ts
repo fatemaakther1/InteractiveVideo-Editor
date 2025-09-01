@@ -11,7 +11,6 @@ export const ELEMENT_TYPES = [
   { type: 'image', label: 'Images', icon: '🖼️' },
   { type: 'opener', label: 'Openers', icon: '📂' },
   { type: 'interactive-button', label: 'Interactive Buttons', icon: '👆' },
-  { type: 'interactive-question', label: 'Interactive Questions', icon: '❓' },
 ] as const;
 
 // Storage Keys
@@ -27,6 +26,5 @@ export const DEFAULT_POSITIONS = {
 
 // UI Constants
 export const UI_CONSTANTS = {
-  QUESTION_MIN_WIDTH: '250px',
-  RESULT_AUTO_HIDE_DELAY: 3000, // milliseconds
+  // Reserved for future UI constants
 } as const;

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import TimingInspector from '../inspector/TimingInspector';
+import AdvancedFormatPanel from './AdvancedFormatPanel';
 import type { InteractiveElement } from '../../types';
 import { ensureElementAnimations } from '../../utils';
-import { triggerAnimationPreview, triggerInteractiveEffectsPreview, previewAnswerFeedbackEffects } from '../../utils/animationUtils';
+import { triggerAnimationPreview, triggerInteractiveEffectsPreview } from '../../utils/animationUtils';
 
 export interface InspectorPanelProps {
   selectedElement: InteractiveElement | null;
@@ -17,10 +18,12 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({
   onUpdateElement,
   onDeleteElement,
 }) => {
+  // All hooks must be called before any early returns
   const [activeTab, setActiveTab] = useState<InspectorTab>('timing');
+
   if (!selectedElement) {
     return (
-      <aside className="w-96 bg-white/95 backdrop-blur-sm border-l border-secondary-200 flex flex-col shadow-soft">
+      <aside className="w-[480px] bg-white/95 backdrop-blur-sm border-l border-secondary-200 flex flex-col shadow-soft">
         <div className="flex-1 flex flex-col items-center justify-center h-64 text-gray-500 p-6">
           <i className="fas fa-mouse-pointer text-4xl mb-4 text-gray-300" />
           <p className="text-sm text-center">
@@ -31,268 +34,13 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({
     );
   }
 
+
+  // Replace the formatContent with AdvancedFormatPanel
   const formatContent = (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center space-x-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white shadow-medium">
-          <i className="fas fa-palette" />
-        </div>
-        <div>
-          <h2 className="font-bold text-secondary-900">Format & Style</h2>
-          <p className="text-xs text-secondary-500">Customize the appearance</p>
-        </div>
-      </div>
-
-      {/* Text Styling */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-secondary-200 shadow-soft">
-        <h3 className="text-sm font-bold text-secondary-800 mb-3 flex items-center">
-          <i className="fas fa-font mr-2 text-primary-600" />
-          Text Styling
-        </h3>
-        <div className="grid grid-cols-6 gap-2">
-          {[
-            { icon: 'fa-bold', title: 'Bold' },
-            { icon: 'fa-italic', title: 'Italic' },
-            { icon: 'fa-underline', title: 'Underline' },
-            { icon: 'fa-strikethrough', title: 'Strikethrough' },
-            { icon: 'fa-align-left', title: 'Align Left' },
-            { icon: 'fa-align-center', title: 'Align Center' },
-          ].map(({ icon, title }) => (
-            <button
-              key={icon}
-              className="p-3 text-secondary-600 hover:text-white hover:bg-primary-600 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-soft hover:shadow-medium"
-              title={title}
-            >
-              <i className={`fas ${icon}`} />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-secondary-200 shadow-soft">
-        <label className="block text-sm font-bold text-secondary-800 mb-3 flex items-center">
-          <i className="fas fa-edit mr-2 text-primary-600" />
-          Content
-        </label>
-        <textarea
-          value={selectedElement.content}
-          onChange={(e) => onUpdateElement({ ...selectedElement, content: e.target.value })}
-          placeholder="Write your text content here..."
-          rows={4}
-          className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 resize-none bg-secondary-50 text-secondary-900 placeholder-secondary-500"
-        />
-      </div>
-
-      {/* Question Configuration - Only show for question elements */}
-      {selectedElement.type === 'interactive-question' && (
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-secondary-200 shadow-soft">
-          <h3 className="text-sm font-bold text-secondary-800 mb-4 flex items-center">
-            <i className="fas fa-question-circle mr-2 text-blue-600" />
-            Question Configuration
-          </h3>
-          
-          <div className="space-y-4">
-            {/* Question Type */}
-            <div>
-              <label className="block text-sm font-bold text-secondary-800 mb-2">
-                Question Type
-              </label>
-              <select 
-                value={selectedElement.questionType || 'single-choice'}
-                onChange={(e) => onUpdateElement({ 
-                  ...selectedElement, 
-                  questionType: e.target.value as any,
-                  // Reset options and correctAnswer when changing question type
-                  options: (e.target.value === 'single-choice' || e.target.value === 'multiple-choice') ? ['Option 1', 'Option 2'] : undefined,
-                  correctAnswer: e.target.value === 'true-false' ? 'True' : ((e.target.value === 'single-choice' || e.target.value === 'multiple-choice') ? 'Option 1' : '')
-                })}
-                className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-secondary-50"
-              >
-                <option value="single-choice">Single Choice (Radio)</option>
-                <option value="multiple-choice">Multiple Choice (Checkbox)</option>
-                <option value="true-false">True/False</option>
-                <option value="text-input">Text Input</option>
-              </select>
-            </div>
-
-            {/* Single Choice and Multiple Choice Options */}
-            {(selectedElement.questionType === 'single-choice' || selectedElement.questionType === 'multiple-choice') && (
-              <div>
-                <label className="block text-sm font-bold text-secondary-800 mb-3">
-                  Answer Options
-                </label>
-                <div className="space-y-2">
-                  {(selectedElement.options || ['Option 1', 'Option 2']).map((option, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        id={`correct-${index}`}
-                        name="correctAnswer"
-                        checked={selectedElement.correctAnswer === option}
-                        onChange={() => onUpdateElement({ ...selectedElement, correctAnswer: option })}
-                        className="w-4 h-4 text-green-600 border-secondary-300 focus:ring-green-500"
-                      />
-                      <input
-                        type="text"
-                        value={option}
-                        onChange={(e) => {
-                          const newOptions = [...(selectedElement.options || [])];
-                          const oldOption = newOptions[index];
-                          newOptions[index] = e.target.value;
-                          // Update correctAnswer if this was the correct option
-                          const newCorrectAnswer = selectedElement.correctAnswer === oldOption ? e.target.value : selectedElement.correctAnswer;
-                          onUpdateElement({ 
-                            ...selectedElement, 
-                            options: newOptions,
-                            correctAnswer: newCorrectAnswer
-                          });
-                        }}
-                        placeholder={`Option ${index + 1}`}
-                        className="flex-1 px-3 py-2 border-2 border-secondary-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-secondary-50"
-                      />
-                      <button
-                        onClick={() => {
-                          const newOptions = selectedElement.options?.filter((_, i) => i !== index) || [];
-                          // If we're removing the correct answer, set the first remaining option as correct
-                          const newCorrectAnswer = selectedElement.correctAnswer === option 
-                            ? (newOptions[0] || '') 
-                            : selectedElement.correctAnswer;
-                          onUpdateElement({ 
-                            ...selectedElement, 
-                            options: newOptions.length > 0 ? newOptions : undefined,
-                            correctAnswer: newCorrectAnswer
-                          });
-                        }}
-                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
-                        title="Remove option"
-                      >
-                        <i className="fas fa-trash text-sm" />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    onClick={() => {
-                      const currentOptions = selectedElement.options || [];
-                      const newOption = `Option ${currentOptions.length + 1}`;
-                      const newOptions = [...currentOptions, newOption];
-                      onUpdateElement({ 
-                        ...selectedElement, 
-                        options: newOptions,
-                        // Set as correct answer if it's the first option
-                        correctAnswer: selectedElement.correctAnswer || newOption
-                      });
-                    }}
-                    className="w-full p-2 border-2 border-dashed border-secondary-300 rounded-xl hover:border-blue-400 hover:bg-blue-50 text-secondary-600 hover:text-blue-700 transition-all duration-200 flex items-center justify-center space-x-2"
-                  >
-                    <i className="fas fa-plus text-sm" />
-                    <span className="text-sm font-medium">Add Option</span>
-                  </button>
-                </div>
-                <p className="text-xs text-secondary-500 mt-2">
-                  <i className="fas fa-info-circle mr-1" />
-                  Select the radio button to mark an option as correct
-                </p>
-              </div>
-            )}
-
-            {/* True/False Correct Answer */}
-            {selectedElement.questionType === 'true-false' && (
-              <div>
-                <label className="block text-sm font-bold text-secondary-800 mb-3">
-                  Correct Answer
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => onUpdateElement({ ...selectedElement, correctAnswer: 'True' })}
-                    className={`p-3 rounded-xl border-2 font-bold transition-all duration-200 ${
-                      selectedElement.correctAnswer === 'True'
-                        ? 'bg-emerald-100 border-emerald-400 text-emerald-800'
-                        : 'bg-secondary-50 border-secondary-200 text-secondary-600 hover:border-emerald-300'
-                    }`}
-                  >
-                    <i className="fas fa-check mr-2" />
-                    True
-                  </button>
-                  <button
-                    onClick={() => onUpdateElement({ ...selectedElement, correctAnswer: 'False' })}
-                    className={`p-3 rounded-xl border-2 font-bold transition-all duration-200 ${
-                      selectedElement.correctAnswer === 'False'
-                        ? 'bg-red-100 border-red-400 text-red-800'
-                        : 'bg-secondary-50 border-secondary-200 text-secondary-600 hover:border-red-300'
-                    }`}
-                  >
-                    <i className="fas fa-times mr-2" />
-                    False
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Text Input Correct Answer */}
-            {selectedElement.questionType === 'text-input' && (
-              <div>
-                <label className="block text-sm font-bold text-secondary-800 mb-2">
-                  Correct Answer
-                </label>
-                <input
-                  type="text"
-                  value={selectedElement.correctAnswer || ''}
-                  onChange={(e) => onUpdateElement({ ...selectedElement, correctAnswer: e.target.value })}
-                  placeholder="Enter the correct answer..."
-                  className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-secondary-50"
-                />
-                <p className="text-xs text-secondary-500 mt-1">
-                  Text input answers are case-sensitive
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Style Controls */}
-      <div className="grid grid-cols-1 gap-4">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-secondary-200 shadow-soft">
-          <label className="block text-sm font-bold text-secondary-800 mb-3 flex items-center">
-            <i className="fas fa-palette mr-2 text-primary-600" />
-            Background Color
-          </label>
-          <div className="flex items-center space-x-3">
-            <input
-              type="color"
-              defaultValue="#2563eb"
-              className="w-12 h-12 border-2 border-secondary-200 rounded-xl cursor-pointer shadow-soft"
-            />
-            <div className="flex-1">
-              <span className="text-sm font-mono text-secondary-700 block">
-                Primary Blue
-              </span>
-              <span className="text-xs text-secondary-500">#2563eb</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-secondary-200 shadow-soft">
-          <label className="block text-sm font-bold text-secondary-800 mb-3 flex items-center">
-            <i className="fas fa-adjust mr-2 text-primary-600" />
-            Transparency
-          </label>
-          <div className="flex items-center space-x-3">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              defaultValue="100"
-              className="flex-1 accent-primary-600"
-            />
-            <span className="text-sm font-mono text-secondary-700 min-w-12 text-center">
-              100%
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <AdvancedFormatPanel
+      selectedElement={selectedElement}
+      onUpdateElement={onUpdateElement}
+    />
   );
 
   // Ensure element has animation properties with defaults
@@ -565,7 +313,7 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({
   ];
 
   return (
-    <aside className="w-96 bg-white/95 backdrop-blur-sm border-l border-secondary-200 flex flex-col shadow-soft">
+    <aside className="w-[480px] bg-white/95 backdrop-blur-sm border-l border-secondary-200 flex flex-col shadow-soft">
       <div className="p-4 border-b border-secondary-200">
         <div className="grid grid-cols-3 gap-2 bg-secondary-100 rounded-xl p-1">
           {tabs.map((tab) => {

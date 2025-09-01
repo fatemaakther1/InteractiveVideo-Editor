@@ -9,11 +9,6 @@ export const getDefaultAnimation = () => ({
     bounceOnClick: false,
     scaleOnHover: true, // Enable scale on hover by default for better UX
   },
-  answerEffects: {
-    correct: 'pulse' as const, // Green pulse for correct answers
-    incorrect: 'shake' as const, // Red shake for incorrect answers
-    neutral: 'pulse' as const, // Blue pulse for neutral selections
-  },
   duration: 300, // 300ms default
   delay: 0,
   easing: 'ease-in-out' as const,

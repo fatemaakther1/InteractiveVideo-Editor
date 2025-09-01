@@ -84,12 +84,27 @@ const EditableCard: React.FC<EditableCardProps> = ({ element, onUpdate }) => {
       )}
 
       {/* Content */}
-      {element.type === "image" && element.url ? (
-        <img
-          src={element.url}
-          alt={element.content}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        />
+      {element.type === "image" ? (
+        element.url ? (
+          <img
+            src={element.url}
+            alt={element.content}
+            style={{ 
+              width: "100%", 
+              height: "100%", 
+              objectFit: "cover",
+              borderRadius: "8px"
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all duration-200">
+            <div className="text-center">
+              <i className="fas fa-plus text-3xl text-gray-400 mb-2"></i>
+              <p className="text-sm text-gray-500 font-medium">No Image</p>
+              <p className="text-xs text-gray-400">Add URL in Inspector</p>
+            </div>
+          </div>
+        )
       ) : isEditing ? (
         <textarea
           autoFocus

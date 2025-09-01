@@ -73,26 +73,48 @@ const VideoPlayerAdmin = forwardRef<VideoPlayerRef, VideoPlayerAdminProps>(
       return (
         <div
           key={element.id}
-          className={`interactive-element ${element.type} admin-mode`}
+          className={`interactive-element ${element.type} admin-mode absolute`}
           style={{
             left: `${element.x}px`,
             top: `${element.y}px`,
-            minWidth:
-              element.type === "interactive-question" ? "200px" : "auto",
+            width: element.width ? `${element.width}px` : '120px',
+            height: element.height ? `${element.height}px` : '50px',
+            minWidth: "auto",
+            border: '2px dashed rgba(255, 255, 255, 0.5)',
+            borderRadius: '8px',
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            pointerEvents: 'none' // Make it non-interactive in admin mode
           }}
           onClick={(e) => e.stopPropagation()}
           title={`${element.type}: ${element.content}`}
         >
-          {element.type === "image" && element.url ? (
-            <img
-              src={element.url}
-              alt={element.content}
-              className="element-image max-w-full h-auto"
-            />
+          {element.type === "image" ? (
+            element.url ? (
+              <img
+                src={element.url}
+                alt={element.content}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  borderRadius: '6px'
+                }}
+                draggable={false}
+              />
+            ) : (
+              <div className="text-white/70 text-center text-sm">
+                <i className="fas fa-plus text-xl mb-1 block"></i>
+                <div>No Image</div>
+              </div>
+            )
           ) : (
-            <div className="element-content">
-              <span className="element-text">{element.content}</span>
-              <span className="element-type-badge">{element.type}</span>
+            <div className="element-content text-center text-white text-sm px-2">
+              <div className="element-text font-medium">{element.content}</div>
+              <div className="element-type-badge text-xs opacity-75 mt-1">{element.type}</div>
             </div>
           )}
         </div>
